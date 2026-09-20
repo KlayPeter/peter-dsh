@@ -4,6 +4,35 @@
 
 v0.1.0 提供独立 CLI、通用 Skill 和 DeepSeek Harness 插件。不调用模型 API；当前 Agent 负责理解用户意图，程序负责扫描、规划和可靠写入。
 
+## 第一次使用：安装到 DeepSeek Harness
+
+已能正常使用 dsh 的用户，按以下顺序操作。需要 Git、Node.js 22+ 和 pnpm；没有 pnpm 时先执行 `npm install -g pnpm`。以下是 macOS / Linux 终端命令。
+
+```sh
+# 下载仓库；已下载的用户直接进入现有 peter-dsh 目录
+git clone https://github.com/KlayPeter/peter-dsh.git
+cd peter-dsh
+npm ci
+# 打包这个插件，安装到 web profile
+npm pack --workspace @klaypeter/project-ai-init
+dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.1.0.tgz"
+```
+
+如果平时用的是 `tui` 或其他 profile，把 `web` 换成对应名称。关闭旧 dsh，将下面路径换成**要配置的目标项目**，重新启动：
+
+```sh
+cd /path/to/your-project
+dsh --profile web
+```
+
+然后在 dsh 对话里说：
+
+> 使用 project-ai-init，检查当前项目，根据已有内容配置 AI 开发规则，保留原有 AGENTS.md 和代码，使用 minimal 预设，目标为 dsh，完成后检查结果。
+
+预期得到 AGENTS.md 的配置入口、`.agent-context/` 中的项目事实与工作规则，以及 `.ai-init/` 中的更新配置。`minimal` 适合先试用；想采用作者的功能文档和开发习惯，可改用 `peter`。
+
+验证工具是否加载：说“调用 ai_project_inspect，只检查，不修改”。如果没有该工具，确认安装和启动使用同一个 profile，并已重启。更完整的环境检查见[仓库安装指南](https://github.com/KlayPeter/peter-dsh#安装到-deepseek-harness)。无需额外安装上游 Skill 或配置模型 API。
+
 ## 两种使用场景
 
 | 场景 | 行为 |
@@ -106,16 +135,9 @@ npm run ai-init -- doctor --root /path/to/project
 
 状态返回：`ready` 可应用；`needs-input` 需要明确需求；`conflict` 有内容归属冲突；`applied` 已应用。CLI 的 needs-input/conflict 退出码为 2，其他错误为 1。doctor 的 refresh-available 表示可以 sync，不等于错误。
 
-## DeepSeek Harness 安装与使用
+## DeepSeek Harness 配置与工具
 
-目前未发布 npm，从仓库打包：
-
-```sh
-npm pack --workspace @klaypeter/project-ai-init
-dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.1.0.tgz"
-```
-
-`web` 换成实际使用的 profile，安装命令需要 pnpm。重启该 profile，从要配置的项目目录启动。文件操作根目录默认是 dsh 启动目录；服务或多项目场景应配置 `workspaceRoot`，例如覆盖层：
+安装步骤见本文开头。文件操作根目录默认是 dsh 启动目录；服务或多项目场景应配置 `workspaceRoot`，例如覆盖层：
 
 ```yaml
 - id: peter-project-ai-init

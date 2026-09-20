@@ -4,6 +4,36 @@
 
 **v0.1.0**：本地 CLI、可移植 Skill、DeepSeek Harness 工具适配。无需模型 API Key；写作由当前 Agent 完成，导出器不调用模型。
 
+## 第一次使用：安装到 DeepSeek Harness
+
+已能正常使用 dsh 的用户，按以下顺序操作。需要 Git、Node.js 22+ 和 pnpm；没有 pnpm 时先执行 `npm install -g pnpm`。以下是 macOS / Linux 终端命令。
+
+```sh
+# 已下载仓库的用户直接进入现有 peter-dsh 目录
+git clone https://github.com/KlayPeter/peter-dsh.git
+cd peter-dsh
+npm ci
+npm pack --workspace @klaypeter/content-delivery
+dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.0.tgz"
+# 为 PDF 和 Mermaid 图准备 Chromium；首次需要下载
+npm run deliver -- setup-browser
+```
+
+`web` 换成你实际使用的 profile。关闭旧 dsh，将下面路径换成**存放待处理文档的项目目录**，重新启动：
+
+```sh
+cd /path/to/your-project
+dsh --profile web
+```
+
+在该目录准备 `notes.md`，然后对 dsh 说：
+
+> 使用 content-delivery，把 notes.md 优化为面向新同事的技术说明，必要时配流程图，另存 final.md，检查后导出 HTML、PDF 和 Word 到 delivery-v1。
+
+完成后打开目标项目中的 `delivery-v1/document.html`、`document.pdf` 或 `document.docx`。再次导出使用新目录名。无需额外模型 API Key，也无需逐个安装上游 Skill。
+
+想先验证安装，可说“调用 delivery_guide，获取技术说明文档的表达优化指南”。没有工具时先检查 profile 是否一致、dsh 是否重启。环境与安装排查见[仓库安装指南](https://github.com/KlayPeter/peter-dsh#安装到-deepseek-harness)；Linux 浏览器系统依赖见下方说明。
+
 ## 支持什么
 
 | 类型参数 | 用途 | 重点 |
@@ -79,19 +109,9 @@ peter-deliver export --input final.md --type explainer --formats html,pdf,docx -
 
 CLI 不提供虚假的“自动改写”：它返回指南、检查结构、导出文件，真正的创作发生在当前 Agent 会话里。
 
-## DeepSeek Harness
+## DeepSeek Harness 配置与工具
 
-采用纯 ESM Cordis 插件，`dsh.bundle.patch` 指向 `cordis.patch.yml`。可从**插件包路径或 tarball**安装；仓库根目录是 monorepo，不能直接把仓库根当作单插件安装。
-
-```sh
-# 仓库根目录：打包
-npm pack --workspace @klaypeter/content-delivery
-# 改为 tarball 的实际绝对路径；web 改为你使用的 profile
-# dsh plugin 需要 pnpm
-dsh plugin --profile web add /absolute/path/klaypeter-content-delivery-0.1.0.tgz
-```
-
-重启对应 profile。在运行 Harness 的同一账户下准备 Chromium。通过 npm 包安装的导出器使用它自己的 Playwright 浏览器版本；也可以在启动 Harness 时设置 `PETER_DELIVERY_CHROMIUM`。
+安装步骤见本文开头。在运行 Harness 的同一账户下准备 Chromium；也可以在启动 Harness 时设置 `PETER_DELIVERY_CHROMIUM` 指向已有浏览器可执行文件。
 
 | 工具 | 用途 |
 | --- | --- |
@@ -152,6 +172,6 @@ delivery-v1/
 
 ## 开发、来源与许可
 
-在仓库根运行 `npm test` 和 `npm run test:integration`。后者实际生成五类文档的三种格式，需要浏览器。见 [实现与验证记录](../../docs/content-delivery/implementation.md)。
+在仓库根运行 `npm test` 和 `npm run test:integration`。后者实际生成五类文档的三种格式，需要浏览器。见 [实现与验证记录](https://github.com/KlayPeter/peter-dsh/blob/main/docs/content-delivery/implementation.md)。
 
 7 个上游 Skill 以原始快照保存在 `vendor/`，按需读取，不一次注入所有工作流。固定提交、许可证与哈希见 [THIRD_PARTY.md](THIRD_PARTY.md) 和 `vendor/provenance.json`。原创部分 MIT，上游部分各自授权。
