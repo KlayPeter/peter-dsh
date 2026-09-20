@@ -3,7 +3,7 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
-  content-delivery:
+  plugins:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,4 +16,4 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk unzip
       - run: npm test
       - run: npm run test:integration
-      - run: npm pack --workspace @klaypeter/content-delivery
+      - run: npm pack --workspaces

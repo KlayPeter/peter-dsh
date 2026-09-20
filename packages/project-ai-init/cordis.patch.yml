@@ -1,0 +1,3 @@
+- insert:
+    - id: peter-project-ai-init
+      name: '@klaypeter/project-ai-init/dsh'

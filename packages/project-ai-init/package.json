@@ -1,0 +1,16 @@
+{
+  "name": "@klaypeter/project-ai-init",
+  "version": "0.1.0",
+  "description": "Project-aware AI configuration and small project starters with reusable preferences",
+  "type": "module",
+  "exports": {".": "./src/index.js", "./dsh": "./src/dsh.js"},
+  "bin": {"peter-ai": "src/cli.js"},
+  "files": ["src", "presets", "skills", "vendor", "examples", "cordis.patch.yml", "README.md", "FEATURE.md", "THIRD_PARTY.md", "LICENSE"],
+  "scripts": {"test": "node --test tests/*.test.js"},
+  "engines": {"node": ">=22"},
+  "peerDependencies": {"@deepseek-ai/dsh-tools": ">=0.1.0-rc.6 <0.2.0"},
+  "peerDependenciesMeta": {"@deepseek-ai/dsh-tools": {"optional": true}},
+  "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
+  "repository": {"type": "git", "url": "git+https://github.com/KlayPeter/peter-dsh.git", "directory": "packages/project-ai-init"},
+  "license": "MIT"
+}

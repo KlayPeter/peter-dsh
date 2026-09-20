@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "repository": "github/awesome-copilot",
+      "commit": "4f4796f0bf30e105700f97ed8408c12b6aa95e06",
+      "license": "MIT",
+      "directories": [
+        "skills/create-agentsmd"
+      ],
+      "files": [
+        {
+          "path": "github/awesome-copilot/LICENSE",
+          "upstreamPath": "LICENSE",
+          "sha256": "e32449d23085399adc1222f7a17408b730550258e51627c153cb108ca9955823"
+        },
+        {
+          "path": "github/awesome-copilot/skills/create-agentsmd/SKILL.md",
+          "upstreamPath": "skills/create-agentsmd/SKILL.md",
+          "sha256": "97b71d3f7c5e30e9f1740fcd7a45d4bf107b7887947cfd3ab92ac99dee294855"
+        }
+      ]
+    },
+    {
+      "repository": "getsentry/skills",
+      "commit": "c2f99a5b04b4cd992ec3022d7c2c3e23e938d241",
+      "license": "Apache-2.0",
+      "directories": [
+        "skills/agents-md"
+      ],
+      "files": [
+        {
+          "path": "getsentry/skills/LICENSE",
+          "upstreamPath": "LICENSE",
+          "sha256": "96e78a9ce85795b117c8929887bdb78f88bf23f7b85a31f0872cde4dff7e92cd"
+        },
+        {
+          "path": "getsentry/skills/skills/agents-md/SKILL.md",
+          "upstreamPath": "skills/agents-md/SKILL.md",
+          "sha256": "8a91ada35068f43ef7ee03e38937863bac4f407878b06f0a4f1ddb4af24bec7e"
+        },
+        {
+          "path": "getsentry/skills/skills/agents-md/SOURCES.md",
+          "upstreamPath": "skills/agents-md/SOURCES.md",
+          "sha256": "14ac842801b7bc938dfbb9efee072fc4e9ab43b456e40f3235fee503544a0721"
+        },
+        {
+          "path": "getsentry/skills/skills/agents-md/SPEC.md",
+          "upstreamPath": "skills/agents-md/SPEC.md",
+          "sha256": "4f8cff992ca96fa4d369227051cd3f5aa8b34974c81bf814aa3a1cf18541e74a"
+        }
+      ]
+    },
+    {
+      "repository": "softaworks/agent-toolkit",
+      "commit": "3027f20f3181758385a1bb8c022d4041dfb4de84",
+      "license": "MIT",
+      "directories": [
+        "skills/agent-md-refactor"
+      ],
+      "files": [
+        {
+          "path": "softaworks/agent-toolkit/LICENSE",
+          "upstreamPath": "LICENSE",
+          "sha256": "4b4447da5344f8b2d3a8a19ba8366d1ac7a24d9ab4690bd04576dc772ddf8321"
+        },
+        {
+          "path": "softaworks/agent-toolkit/skills/agent-md-refactor/README.md",
+          "upstreamPath": "skills/agent-md-refactor/README.md",
+          "sha256": "7d869ba570d3649430ab8dbce3e24de9415679aa99028ab0afd05e12898e8477"
+        },
+        {
+          "path": "softaworks/agent-toolkit/skills/agent-md-refactor/SKILL.md",
+          "upstreamPath": "skills/agent-md-refactor/SKILL.md",
+          "sha256": "f20e68b59875ba43cd2680519cf5e77f6c55b51330b927394291f8f11478c21e"
+        }
+      ]
+    },
+    {
+      "repository": "anthropics/claude-plugins-official",
+      "commit": "c447c3207a425bc4e2a0d068435f64b0477ae981",
+      "license": "Apache-2.0",
+      "directories": [
+        "plugins/claude-code-setup/skills/claude-automation-recommender",
+        "plugins/claude-md-management/skills/claude-md-improver"
+      ],
+      "files": [
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/LICENSE",
+          "upstreamPath": "plugins/claude-code-setup/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/SKILL.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/SKILL.md",
+          "sha256": "441c57e26f0931b64dd085deaad9213c4e3efea27d916dd7443cd33c7e338227"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/hooks-patterns.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/references/hooks-patterns.md",
+          "sha256": "7b6e91b53aa0f1ed471fd66e177de17a88c1d6620ce95f5c8e8cdfebd20d939e"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/mcp-servers.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/references/mcp-servers.md",
+          "sha256": "0f62bf84869d7e982e5dc15ebc789bb4734175b7d7b824051548c615ba79aa97"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/plugins-reference.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/references/plugins-reference.md",
+          "sha256": "6570ff4c853253b3f15fb62e5d540cbf0ce3371936437791dde8fb53b7d444f3"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/skills-reference.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/references/skills-reference.md",
+          "sha256": "b4b57d953526a07146d5757ca5332034b9b4b4eeba839e4bb08111398c94556f"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-code-setup/skills/claude-automation-recommender/references/subagent-templates.md",
+          "upstreamPath": "plugins/claude-code-setup/skills/claude-automation-recommender/references/subagent-templates.md",
+          "sha256": "7f9a107d8619ff96fea07d5a17da31b269cec0ee343e5a9ff643c0d6cb4ba944"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-md-management/LICENSE",
+          "upstreamPath": "plugins/claude-md-management/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-md-management/skills/claude-md-improver/SKILL.md",
+          "upstreamPath": "plugins/claude-md-management/skills/claude-md-improver/SKILL.md",
+          "sha256": "b06c7420be08ca1c7f6d75f7f4709fdb787624a2d363e2f8052216d8c780f85b"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-md-management/skills/claude-md-improver/references/quality-criteria.md",
+          "upstreamPath": "plugins/claude-md-management/skills/claude-md-improver/references/quality-criteria.md",
+          "sha256": "383def16b05dca948297dd1acb33f007cb1b1b2c368454d424c5634348a8bab1"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-md-management/skills/claude-md-improver/references/templates.md",
+          "upstreamPath": "plugins/claude-md-management/skills/claude-md-improver/references/templates.md",
+          "sha256": "de0aa3ac30120a0c77f9cd82738a75ed8326864f98feb89356a253f2deaf3ab0"
+        },
+        {
+          "path": "anthropics/claude-plugins-official/plugins/claude-md-management/skills/claude-md-improver/references/update-guidelines.md",
+          "upstreamPath": "plugins/claude-md-management/skills/claude-md-improver/references/update-guidelines.md",
+          "sha256": "02a158d6ca41a0ab702a67a213e92205f09c073cea53796633251bc62fd7ec55"
+        }
+      ]
+    }
+  ]
+}
