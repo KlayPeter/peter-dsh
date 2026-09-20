@@ -1,0 +1,12 @@
+{
+  "name": "peter-dsh",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "test:integration": "npm run test:integration --workspace @klaypeter/content-delivery",
+    "deliver": "node packages/content-delivery/src/cli.js"
+  },
+  "engines": {"node": ">=22"}
+}
