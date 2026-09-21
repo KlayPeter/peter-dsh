@@ -83,7 +83,7 @@ export function apply(ctx, config = {}) {
       presetJson: {
         type: "string",
         description:
-          "Custom portable preset JSON (id, description, rules, featureDocs, tools). Exclusive with preset.",
+          "Custom portable preset JSON (id, description, rules, featureDocs, projectCheck, tools). Exclusive with preset.",
       },
       projectRulesJson: {
         type: "string",

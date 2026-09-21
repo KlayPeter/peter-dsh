@@ -67,6 +67,7 @@ export function compactInstructions(scan, config, facts) {
   if (rules.length) sections.push('### 工作约定\n\n' + rules.map(r => '- ' + r).join('\n'));
   if (config.preset.featureDocs) sections.push('功能文档沿用现有索引；仅在实际功能需要时补充 FEATURE.md 和内联 Mermaid，不预先铺设空文档。');
   if (config.preset.tools.length) sections.push('所选偏好需要的工具：' + config.preset.tools.join('、') + '。安装、连接和实际调用需分别验证。');
+  if (config.preset.projectCheck) sections.push('改动后使用 project-check Skill，按本项目脚本与功能文档选择检查；Skill 未在宿主出现时核对对应目录或刷新会话。');
   if (!shown.length) sections.push('尚未确认可运行的常用命令；先查看 README / CI，不能编造 npm test。');
   return sections.join('\n\n') + '\n';
 }

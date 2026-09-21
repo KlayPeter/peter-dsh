@@ -58,3 +58,11 @@ inspect 提供有序的阅读入口、脚本真实定义和限量带行号摘录
 tests/compact.test.js 验证轻量默认、多工具链、来源过期与应用前变化、旧配置兼容迁移、未修改文件清理与手写保留、摘要截断、个人模板不携带项目知识。原 expanded 数据保护测试继续保留，CLI 与真实 dsh 工具参数也需要验证。
 
 本轮验证：29 项 AI Init 测试与全仓库 53 项测试通过；独立 tarball CLI 验证真实 v0.2 配置保留与显式 compact 迁移；Harness 0.1.0-rc.6 隔离 web profile 实际加载新版并调用 inspect、plan、apply、doctor，验证来源变化返回 needs-review。用户参考项目仅只读预览，未应用，也未执行其业务脚本。没有进行模型驱动的完整开发收益评测。
+
+## v0.4：Peter 工作流与宿主适配
+
+Peter 预设新增保护既有改动、目录规则不外溢、接口契约联动检查，并启用 projectCheck。src/adapters.js 从当前扫描生成项目级 Skill，按 targets 输出到 Codex/dsh 共享目录和 Claude 原生目录。minimal 不变；旧模板缺少字段视为关闭，不静默引入新工作流。生成文件使用既有归属、哈希、锁与回滚机制，tests/adapters.test.js 验证目标矩阵、冲突、手改保护、去除目标及模板导出。
+
+Codex 实际 app-server skills/list 已发现生成 Skill，dsh 真实 FileSystemSkillProvider 已发现并读取正文；Claude 使用官方目录和格式，已通过 Skill 校验，未做其模型驱动会话验证。配置状态与宿主实际加载状态分开，不声称文件生成就完成所有 Agent 端到端验证。
+
+本轮全仓库 56 项测试通过（AI Init 32 项）；独立 v0.4.0 tarball 安装后，Peter + 三个 targets 的初始化、sync 和 doctor 通过。未自动修改用户现有项目或宿主全局配置。

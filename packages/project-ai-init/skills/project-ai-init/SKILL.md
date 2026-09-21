@@ -13,8 +13,9 @@ description: 让 Agent 接手项目时知道在哪改、怎么跑、哪些约定
 2. 沿实际入口读少量相关代码，回答：项目由哪些部分组成、启动与验证分别在哪执行、修改当前功能应同步哪些代码/测试/文档。先找已有说明，不重复抄技术栈清单，也不根据目录名编造架构。
 3. 用户已选偏好就沿用；首次简短提供 minimal / Peter / 自己的模板或参考仓库选择，可说明默认采用 minimal 并继续不依赖选择的读取工作。不让用户填写 JSON。偏好提取与“以后都这样”的更新见 [偏好迭代](references/preferences.md)。
 4. 对有价值的项目关系，用 `projectFactsJson` / `--facts-file` 保存 `[{"text":"具体提醒","sources":["真实代码或文档路径"]}]`，最多 12 条。来源哈希只验证文本版本，不能证明推理正确。用户明确要求的项目例外放 projectRules；跨项目习惯放 preset。不要把本次待办、凭据或一次测试通过永久写成项目事实。
-5. 新项目默认 `compact` + `minimal`：一份 AGENTS.md 开发速查，另有 `.ai-init` 更新记录；不默认安装 MCP、建立功能文档体系或复制此插件源码到业务项目。旧项目默认沿用旧布局和偏好；用户要求精简时显式选择 `layout=compact`，先检查差异和手改冲突。大项目只有确有阅读收益才选 expanded。
-6. 生成计划并在既有授权范围内应用。`needs-input` 只问影响结果的缺口；`conflict` 保留现状。不要把用户说“配置项目”误解成“改造业务”。空项目按 [空项目](references/empty.md) 明确最小骨架；业务功能仍由当前 Agent 实现。
+5. Peter 预设还生成 project-check 项目 Skill：Codex/dsh 共用 .agents/skills，Claude 使用 .claude/skills；只生成所选 targets 的文件，已有同名 Skill 不覆盖。默认 minimal 不新增这个工作流；用户想采用 Peter 的完整习惯时显式选择 peter。选择 Claude 时保留 CLAUDE.md 的 @AGENTS.md 入口，日常规则不复制成三份。
+6. 新项目默认 `compact` + `minimal`：一份 AGENTS.md 开发速查，另有 `.ai-init` 更新记录；不默认安装 MCP、建立功能文档体系或复制此插件源码到业务项目。旧项目默认沿用旧布局和偏好；用户要求精简时显式选择 `layout=compact`，先检查差异和手改冲突。大项目只有确有阅读收益才选 expanded。
+7. 生成计划并在既有授权范围内应用。`needs-input` 只问影响结果的缺口；`conflict` 保留现状。不要把用户说“配置项目”误解成“改造业务”。空项目按 [空项目](references/empty.md) 明确最小骨架；业务功能仍由当前 Agent 实现。
 
 ## 证明它有用
 

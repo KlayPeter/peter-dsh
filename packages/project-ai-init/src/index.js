@@ -13,6 +13,7 @@ import {
 } from "./files.js";
 import { inspectProject } from "./scan.js";
 import { chooseStarter, starterNames, starterFiles } from "./starters.js";
+import { projectCheckPaths, adapterSummary } from "./adapters.js";
 import { resolveFacts, projectBriefing } from "./briefing.js";
 import { renderFiles, loadPreset } from "./render.js";
 export { inspectProject, loadPreset };
@@ -63,6 +64,7 @@ async function readState(root) {
         ? ["AGENTS.md", "CLAUDE.md", ".gitignore"]
         : entry.kind === "managed"
           ? [
+              ...projectCheckPaths,
               ".agent-context/project.md",
               ".agent-context/workflow.md",
               ".agent-context/feature-docs.md",
@@ -280,7 +282,7 @@ export async function planProject({
     if (!(file in desired) && old.kind !== "seed") await compare(file, null);
   const stateAfter = json({
     schemaVersion: 1,
-    generator: "@klaypeter/project-ai-init@0.3.0",
+    generator: "@klaypeter/project-ai-init@0.4.0",
     entries,
   });
   const stateBefore = await readText(root, STATE);
@@ -314,6 +316,7 @@ export async function planProject({
       staleNotes: factSet.stale.length,
       cautions: projectBriefing(scan).cautions,
       tools: preferences.tools,
+      adapters: adapterSummary(targets, preferences.projectCheck),
       validation: 'Commands discovered, not executed. Host must review definitions and run suitable checks.',
     },
     changes,

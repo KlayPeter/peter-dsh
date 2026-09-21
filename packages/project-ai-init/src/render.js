@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { json } from "./files.js";
 import { compactInstructions, factSections } from "./briefing.js";
+import { adapterFiles, projectCheckSkill } from "./adapters.js";
 import { starterFiles } from "./starters.js";
 export const skillRoot = fileURLToPath(
   new URL("../skills/project-ai-init/", import.meta.url),
@@ -48,7 +49,9 @@ export async function loadPreset(value = "peter") {
       ))
   )
     throw new Error("Invalid preset tools: use tool identifiers.");
+  if (preset.projectCheck !== undefined && typeof preset.projectCheck !== "boolean") throw new Error("projectCheck must be boolean.");
   return {
+    projectCheck: preset.projectCheck === true,
     tools: [...new Set(preset.tools || [])],
     id: preset.id,
     description: String(preset.description || ""),
@@ -118,6 +121,7 @@ export function renderFiles(scan, config, firstRun, facts = { active: [], stale:
   } else {
     add("AGENTS.md", compactInstructions(scan, config, facts), "block");
   }
+  for (const file of adapterFiles(targets, preset.projectCheck)) add(file, projectCheckSkill(scan));
   if (targets.includes("claude")) add("CLAUDE.md", "@AGENTS.md\n", "block");
   if (firstRun && scan.mode === "empty" && starter !== "none") {
     for (const [file, content] of Object.entries(starterFiles(starter))) {

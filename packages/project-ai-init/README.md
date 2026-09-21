@@ -30,7 +30,7 @@ frontend → pnpm run build     来源 frontend/package.json#scripts.build
 
 ## 安装到 DeepSeek Harness
 
-需要已配置好的 dsh、Node.js 22+、Git 和 pnpm。当前 **v0.3.0**，尚未发布 npm；以下命令用于 macOS / Linux。已安装插件直接使用，无需每个工作区再 clone。
+需要已配置好的 dsh、Node.js 22+、Git 和 pnpm。当前 **v0.4.0**，尚未发布 npm；以下命令用于 macOS / Linux。已安装插件直接使用，无需每个工作区再 clone。
 
 没有 pnpm 时先执行 `npm install -g pnpm`。优先复用已有插件源码；首次下载放在固定工具目录，下面的 `source` 目录需尚不存在：
 
@@ -41,7 +41,7 @@ cd "$HOME/.local/share/peter-dsh/source"
 npm ci
 mkdir -p "$HOME/.local/share/peter-dsh/packages"
 npm pack --workspace @klaypeter/project-ai-init --pack-destination "$HOME/.local/share/peter-dsh/packages"
-dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-project-ai-init-0.3.0.tgz"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-project-ai-init-0.4.0.tgz"
 ```
 
 `web` 换成实际使用的 profile。关闭旧 dsh，再从**要配置的项目目录**启动：
@@ -79,7 +79,7 @@ dsh --profile web
 首次可选 minimal（默认）、Peter、自己的模板，或指定参考仓库。已选过就沿用，不每次重问。
 
 - **minimal**：保留项目原有方式，补命令和必要规则，没有额外 MCP 依赖。
-- **Peter**：采用作者的功能文档、Mermaid、聚焦改动及 CodeGraph 习惯。选了这套偏好，才按实际环境准备其工具。
+- **Peter**：采用作者的功能文档、Mermaid、聚焦改动及 CodeGraph 习惯，增加 project-check 项目自检 Skill。选了这套偏好，才按实际环境准备其工具。
 - **自己的模板 / 参考仓库**：由 Agent 提炼可复用习惯，再适配当前项目。不会照搬旧项目的业务目录、技术栈或凭据。
 
 可以说：
@@ -89,6 +89,31 @@ dsh --profile web
 > 从我指定的仓库提取工作习惯；按当前项目调整，不复制它的业务结构。
 
 个人模板只带走习惯；项目命令、业务结论和来源版本不随模板导出。
+
+## 想用 Peter 的完整工作方式？
+
+Peter 预设参考了作者真实项目里的功能索引、Owner FEATURE.md、内联 Mermaid、CodeGraph、聚焦改动和验证后提交习惯。另补充了三个常见问题的处理：保留用户与其他 Agent 的未提交改动、子目录工具链不外溢、接口变更沿调用方核对类型与兼容性。
+
+直接对 Agent 说：
+
+> 使用 project-ai-init，采用最新版 Peter 预设，目标是 Codex、Claude 和 dsh，使用 compact 布局。结合当前项目保留已有约定，生成 project-check，准备规则所需的工具并验证；不要照搬参考项目的技术栈。
+
+| Agent | 项目规则 | 改动后检查入口 |
+| --- | --- | --- |
+| Codex | AGENTS.md | .agents/skills/project-check，可请求使用 $project-check |
+| Claude Code | CLAUDE.md 引用 AGENTS.md | .claude/skills/project-check，可用 /project-check |
+| dsh | AGENTS.md | 复用 .agents/skills/project-check，直接说“使用 project-check” |
+
+project-check 带上当前项目的候选检查命令，沿实际 diff、接口和功能文档选择验证。它不会自动运行所有脚本，也不会自动提交。Codex/dsh 共用一份 Skill；只生成选中 Agent 的文件。minimal 仍不增加这些文件；自定义模板可设 `projectCheck: false`。
+
+CLI 已安装时可显式选择：
+
+```sh
+peter-ai init --root /path/to/project --request "采用 Peter 工作方式" \
+  --preset peter --targets codex,claude,dsh --layout compact
+```
+
+已有项目使用 `sync` 替代 `init`。`--preset peter` 会切换到新版内置 Peter；若当前模板有自己的修改，让 Agent 合并所需规则与 `projectCheck`，保留你的其他偏好。具体适配与来源见 [Agent 适配](skills/project-ai-init/references/adapters.md)。
 
 ## 旧项目怎么升级、精简？
 
@@ -114,7 +139,7 @@ peter-ai doctor --root /path/to/project
 
 ```sh
 npm pack --workspace @klaypeter/project-ai-init
-npm install -g ./klaypeter-project-ai-init-0.3.0.tgz
+npm install -g ./klaypeter-project-ai-init-0.4.0.tgz
 peter-ai install-skill --target /path/to/project/.agents/skills
 ```
 
