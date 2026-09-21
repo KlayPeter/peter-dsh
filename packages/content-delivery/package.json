@@ -1,6 +1,6 @@
 {
   "name": "@klaypeter/content-delivery",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Agent-guided Chinese document authoring and local Markdown to HTML, PDF and DOCX delivery",
   "type": "module",
   "main": "src/index.js",
@@ -9,7 +9,7 @@
   "files": ["src", "skills", "vendor", "examples", "cordis.patch.yml", "README.md", "THIRD_PARTY.md", "LICENSE"],
   "dsh": {"bundle": {"patch": "./cordis.patch.yml"}},
   "scripts": {
-    "test": "node --test tests/unit.test.js",
+    "test": "node --test tests/unit.test.js tests/review.test.js",
     "test:integration": "node --test tests/integration.test.js",
     "setup:browser": "playwright install chromium"
   },

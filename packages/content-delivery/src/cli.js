@@ -5,12 +5,13 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { exportDocument, checkMarkdown, getGuide, profiles, skillRoot } from './index.js';
+import { exportDocument, reviewMarkdown, checkMarkdown, getGuide, profiles, skillRoot } from './index.js';
 
-const help = `Peter Content Delivery 0.1.1
+const help = `Peter Content Delivery 0.2.0
 
 Usage:
   peter-deliver guide --type prd|explainer|design|blog|research [--mode format|improve|create] [--audience text]
+  peter-deliver review --input final.md [--original notes.md] [--type explainer]
   peter-deliver check --input draft.md [--type explainer]
   peter-deliver export --input draft.md --out new-directory [--formats html,pdf,docx] [--type explainer]
   peter-deliver install-skill --target project/.agents/skills
@@ -27,13 +28,21 @@ Output directories must be new. PDF and Mermaid require Chromium.
 
 async function main() {
   const { values, positionals } = parseArgs({ allowPositionals: true, options: {
-    help: { type: 'boolean', short: 'h' }, type: { type: 'string' }, mode: { type: 'string' }, audience: { type: 'string' }, input: { type: 'string' }, out: { type: 'string' }, formats: { type: 'string' }, target: { type: 'string' }, 'allow-draft': { type: 'boolean' }, 'no-toc': { type: 'boolean' },
+    help: { type: 'boolean', short: 'h' }, type: { type: 'string' }, mode: { type: 'string' }, audience: { type: 'string' }, input: { type: 'string' }, original: { type: 'string' }, out: { type: 'string' }, formats: { type: 'string' }, target: { type: 'string' }, 'allow-draft': { type: 'boolean' }, 'no-toc': { type: 'boolean' },
   } });
   const [command] = positionals;
   if (values.help || !command) return console.log(help);
   if (positionals.length !== 1) throw new Error('Unexpected positional argument. See --help.');
   const type = values.type || 'explainer';
   if (command === 'guide') return console.log(await getGuide({ type, mode: values.mode, audience: values.audience }));
+  if (command === 'review') {
+    if (!values.input) throw new Error('--input is required.');
+    const result = reviewMarkdown(await readFile(values.input, 'utf8'), {type, original:values.original ? await readFile(values.original,'utf8') : undefined});
+    console.log(JSON.stringify(result,null,2));
+    if (result.status === 'blocked') process.exitCode = 1;
+    else if (result.status === 'needs-review') process.exitCode = 2;
+    return;
+  }
   if (command === 'check') {
     if (!values.input) throw new Error('--input is required.');
     const result = checkMarkdown(await readFile(values.input, 'utf8'), { type });

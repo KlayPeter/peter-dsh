@@ -3,6 +3,7 @@ import path from "node:path";
 import { defineTool } from "@deepseek-ai/dsh-tools";
 import {
   start,
+  runChecks,
   inspect,
   check,
   observe,
@@ -71,6 +72,16 @@ export function apply(ctx, config = {}) {
     "Recheck evidence freshness and export immutable Markdown/JSON reports. Scoped automated pass is not proof of omitted requirements, semantic correctness, live production state or user acceptance.",
     { run: str(true) },
     exportReport,
+  );
+  register(
+    "acceptance_run",
+    "Run only the selected reviewed automatic criteria (max 10), then export a report with a concise overview. Requires the contractHash from start/inspect; a changed contract stops further execution. Does not execute manual checks or automatically fix code.",
+    {
+      run: str(true),
+      criteria: { type: "array", items: { type: "string" }, required: true },
+      contractHash: str(true),
+    },
+    (a) => runChecks({ ...a, export: true }),
   );
   ctx.inject(["skills"], (child) =>
     child.skills.register({

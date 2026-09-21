@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { defineTool } from '@deepseek-ai/dsh-tools';
-import { exportDocument, getGuide, checkMarkdown, profiles, skillRoot } from './index.js';
+import { exportDocument, reviewMarkdown, getGuide, checkMarkdown, profiles, skillRoot } from './index.js';
 
 export const name = 'peter-content-delivery';
 export const inject = ['tools'];
@@ -37,7 +37,11 @@ export function apply(ctx, config = {}) {
     const result = await exportDocument({ input: await workspacePath(root, args.input), out: await workspacePath(root, args.out, { output: true }), formats: (args.formats || 'html').split(',').map(f => f.trim()), type: args.type, allowDraft: args.allowDraft, signal: exec?.signal });
     return JSON.stringify(result, null, 2);
   } }));
+  ctx.tools.register(defineTool({name:'delivery_review',description:'Review a final Markdown against an optional original: flag changed numeric tokens and removed source links, plus reader questions. Heuristics only; not semantic fact validation. Paths stay within workspaceRoot.',parameters:{input:{type:'string',required:true},original:{type:'string'},type},output,async execute(args,exec){
+    exec?.signal?.throwIfAborted();
+    return JSON.stringify(reviewMarkdown(await readFile(await workspacePath(root,args.input),'utf8'),{type:args.type,original:args.original ? await readFile(await workspacePath(root,args.original),'utf8') : undefined}),null,2);
+  }}));
   ctx.inject(['skills'], child => {
-    child.skills.register({ name: 'content-delivery', description: '按 PRD、说明、详细设计、博客或调研类型改善表达与图示，交付 HTML、PDF、Word。', source: 'runtime', provider: name, resourceBase: { kind: 'directory', path: skillRoot }, content: readFileSync(path.join(skillRoot, 'SKILL.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '') + '\n\nHarness 环境中优先使用 delivery_guide、delivery_check、delivery_export 工具；工具路径以其描述中的 workspaceRoot 为准。' });
+    child.skills.register({ name: 'content-delivery', description: '按 PRD、说明、详细设计、博客或调研类型改善表达与图示，交付 HTML、PDF、Word。', source: 'runtime', provider: name, resourceBase: { kind: 'directory', path: skillRoot }, content: readFileSync(path.join(skillRoot, 'SKILL.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '') + '\n\nHarness 环境中优先使用 delivery_guide、delivery_review、delivery_check、delivery_export 工具；工具路径以其描述中的 workspaceRoot 为准。' });
   });
 }

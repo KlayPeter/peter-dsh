@@ -19,7 +19,7 @@
 
 > 把 notes.md 整理成给新同事看的技术说明。保留事实和限制，必要时加流程图，另存 final.md，导出 HTML、PDF、Word 到 delivery-v1。
 
-Agent 先按指南整理文稿，再调用检查和导出工具。完成后，你会得到：
+Agent 先按读者和用途整理文稿，再对照原稿复查数字与来源变化，核对条件和限制，最后导出文件。完成后，你会得到：
 
 ```text
 final.md                  # 整理后的文稿，可继续修改
@@ -35,7 +35,7 @@ delivery-v1/
 
 写作和图示选择由当前 Agent 完成，程序负责检查与导出。导出命令本身不会自动改写文章；事实、来源和最终阅读效果仍需要复查。
 
-当前版本 **v0.1.1**，支持 DeepSeek Harness、独立 CLI 和可移植 Skill。复用当前 Agent 的模型，无需额外模型 API Key。
+当前版本 **v0.2.0**，支持 DeepSeek Harness、独立 CLI 和可移植 Skill。复用当前 Agent 的模型，无需额外模型 API Key。
 
 [安装到 dsh](#第一次使用安装到-deepseek-harness) · [其他 Agent](#给其他-agent-使用) · [直接用命令行导出](#安装与第一次导出)
 
@@ -53,7 +53,7 @@ cd "$HOME/.local/share/peter-dsh/source"
 npm ci
 mkdir -p "$HOME/.local/share/peter-dsh/packages"
 npm pack --workspace @klaypeter/content-delivery --pack-destination "$HOME/.local/share/peter-dsh/packages"
-dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.1.1.tgz"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.2.0.tgz"
 # 为 PDF 和 Mermaid 图准备 Chromium；首次需要下载
 npm run deliver -- setup-browser
 ```
@@ -117,7 +117,7 @@ PETER_DELIVERY_CHROMIUM='/Applications/Google Chrome.app/Contents/MacOS/Google C
 
 ```sh
 npm pack --workspace @klaypeter/content-delivery
-npm install -g ./klaypeter-content-delivery-0.1.1.tgz
+npm install -g ./klaypeter-content-delivery-0.2.0.tgz
 peter-deliver --help
 peter-deliver setup-browser
 ```
@@ -142,11 +142,13 @@ peter-deliver install-skill --target .agents/skills
 ```sh
 peter-deliver guide --type explainer --mode improve --audience "新加入团队的工程师"
 # 让 Agent 读取返回的指南和原始材料，写出 final.md
-peter-deliver check --input final.md --type explainer
+peter-deliver review --input final.md --original notes.md --type explainer
 peter-deliver export --input final.md --type explainer --formats html,pdf,docx --out delivery-v1
 ```
 
 CLI 不提供虚假的“自动改写”：它返回指南、检查结构、导出文件，真正的创作发生在当前 Agent 会话里。
+
+Codex 项目 Skill 使用 `.agents/skills`；Claude Code 使用 `.claude/skills`，将上方 install-skill 的 `--target` 换成对应目录即可。更新后刷新或重启 Agent；已有同名 Skill 先保存自定义修改再替换。dsh 的插件安装已注册 Skill，无需重复复制。
 
 ## DeepSeek Harness 配置与工具
 
@@ -155,6 +157,7 @@ CLI 不提供虚假的“自动改写”：它返回指南、检查结构、导�
 | 工具 | 用途 |
 | --- | --- |
 | `delivery_guide` | 按模式、文档类型和读者返回写作指南 |
+| `delivery_review` | 对照原稿与定稿，提示数字变化、来源丢失和读者复查问题 |
 | `delivery_check` | 检查指定 Markdown 的结构和未完成标记 |
 | `delivery_export` | 将指定 Markdown 导出至新目录 |
 
@@ -188,7 +191,19 @@ v0.1.1 将本地图片转换放到独立子进程，避免插件的 sharp 原生
 
 Word 中文字体默认按操作系统选择 PingFang SC / Microsoft YaHei / Noto Sans CJK SC，接收者需安装相应字体或允许字体替换。可通过 `PETER_DELIVERY_CJK_FONT` 设置字体族名，例如 `Songti SC`。字体不会嵌入 DOCX；无中文字体的预览器可能显示方块，应安装或配置字体后复查。
 
-v0.1 不提供原生数学公式、脚注、复杂内嵌 HTML、Word 修订、网络抓取、在线发布。公式等内容先转换为图片；普通代码保留文本，没有语法高亮。Markdown 的原始 HTML 会作为文本显示。
+当前不提供原生数学公式、脚注、复杂内嵌 HTML、Word 修订、网络抓取、在线发布。公式等内容先转换为图片；普通代码保留文本，没有语法高亮。Markdown 的原始 HTML 会作为文本显示。
+
+想先看效果，可对比[零散原稿](examples/rewrite/notes.md)与[带流程图的定稿](examples/rewrite/final.md)。示例为虚构任务队列，展示结构调整和保留限制的方式。
+
+## 改写后，先看看有没有改丢
+
+```sh
+peter-deliver review --input final.md --original notes.md --type explainer
+```
+
+它会列出消失和新增的数字、减少和增加的来源链接、标题结构与图示数量，并给出具体复查提示。例如原稿“最多 3 次”变成“最多 5 次”，会提示数字变化；是否有合理依据，由 Agent 结合原稿判断。
+
+这不是质量评分，也不懂全部语义：同一个数字被放到错误对象上可能漏检，`1000` 改成 `1,000` 可能被提示。代码里的数字不参与对照。否定、限制和不确定性仍由 Agent 阅读核对。review 不修改文稿，退出码 0 为无机械提示、2 为待复查、1 为阻断或操作错误；需复查时先核实再交付。
 
 ## 交付包与检查
 
@@ -217,7 +232,7 @@ delivery-v1/
 
 7 个上游 Skill 以原始快照保存在 `vendor/`，按需读取，不一次注入所有工作流。固定提交、许可证与哈希见 [THIRD_PARTY.md](THIRD_PARTY.md) 和 `vendor/provenance.json`。原创部分 MIT，上游部分各自授权。
 
-## 从 v0.1.0 升级
+## 从旧版本升级
 
 在插件仓库目录执行以下命令，再关闭并重新启动相同的 dsh profile：
 
@@ -226,7 +241,7 @@ git pull
 npm ci
 mkdir -p "$HOME/.local/share/peter-dsh/packages"
 npm pack --workspace @klaypeter/content-delivery --pack-destination "$HOME/.local/share/peter-dsh/packages"
-dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.1.1.tgz"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.2.0.tgz"
 ```
 
-独立 CLI 用户改用 `npm install -g ./klaypeter-content-delivery-0.1.1.tgz`。无需修改 dsh 自身依赖或重新下载 Chromium。
+独立 CLI 用户改用 `npm install -g "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.2.0.tgz"`。无需修改 dsh 自身依赖或重新下载 Chromium。

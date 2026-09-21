@@ -22,13 +22,14 @@ try {
   await ctx.plugin(ToolRuntime);
   await ctx.plugin(SkillRegistry);
   const fiber = await ctx.plugin(plugin, { workspaceRoot: root });
-  assert.deepEqual(ctx.tools.schemas().map(t => t.name).sort(), ['delivery_check', 'delivery_export', 'delivery_guide']);
+  assert.deepEqual(ctx.tools.schemas().map(t => t.name).sort(), ['delivery_check', 'delivery_export', 'delivery_guide', 'delivery_review']);
   assert.ok((await ctx.skills.list()).some(s => s.name === 'content-delivery'));
   let id = 0;
   const run = (name, args) => ctx.tools.execute({ callId: `smoke-${++id}`, name, arguments: args, signal: new AbortController().signal });
   for (const [name, args] of [
     ['delivery_guide', { type: 'design' }],
     ['delivery_check', { input: 'input.md' }],
+    ['delivery_review', { input: 'input.md', original: 'input.md' }],
     ['delivery_export', { input: 'input.md', out: 'out', formats: 'html,docx' }],
   ]) {
     const result = await run(name, args);
@@ -43,7 +44,7 @@ try {
   await fiber.dispose();
   assert.equal(ctx.tools.schemas().length, 0);
   assert.equal((await ctx.skills.list()).length, 0);
-  console.log('Harness smoke passed: register, execute 3 tools, path guards, unregister.');
+  console.log('Harness smoke passed: register, execute 4 tools, path guards, unregister.');
 } finally {
   ctx.registry.delete(SkillRegistry);
   ctx.registry.delete(ToolRuntime);

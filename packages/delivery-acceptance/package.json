@@ -1,5 +1,5 @@
 {
-  "name":"@klaypeter/delivery-acceptance","version":"0.1.0","type":"module",
+  "name":"@klaypeter/delivery-acceptance","version":"0.2.0","type":"module",
   "description":"Task acceptance with scoped snapshots, captured evidence and explicit gaps",
   "exports":{".":"./src/index.js","./dsh":"./src/dsh.js"},
   "bin":{"peter-accept":"src/cli.js"},

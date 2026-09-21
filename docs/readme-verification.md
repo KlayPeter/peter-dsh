@@ -50,3 +50,20 @@ npm run test:integration
 内容交付 11 项测试及 2 项格式集成测试通过。新增回归覆盖转换后宿主不加载 sharp/libvips、PNG/WebP 尺寸、JPEG 方向修正、坏图及 SVG 拒绝、取消子进程。图片子进程设置 30 秒超时和输出上限；继续保留 10 MiB 输入与 4,000 万像素限制。
 
 实现依据：[Node.js 子进程 API](https://nodejs.org/download/release/latest-jod/docs/api/child_process.html)与 [sharp 原生依赖说明](https://sharp.pixelplumbing.com/install/)。进程隔离避免本插件的原生库与宿主共享地址空间，无需修改 dsh 的依赖。
+
+
+## 内容交付与验收 v0.2.0（2026-09-21）
+
+在隔离 DSH_HOME 的 web profile 中打包安装两个 v0.2.0 包，用真实 dsh 进程调用新增工具；未改动日常使用的 profile。
+
+| 验证 | 结果 |
+| --- | --- |
+| 全仓单元测试 | 63 项通过；包括原稿数字与来源对照、批量 ID 校验、合同变动中止和证据过期 |
+| 内容交付格式集成 | 2 项通过，覆盖五类文档 × HTML/PDF/DOCX，以及坏图失败 |
+| dsh 真实服务 | 4 个内容工具、6 个验收工具注册/卸载与调用通过 |
+| 打包安装后实际调用 | guide、review、export、start、inspect、run 成功；改动数字会提示，manual 必要项仍阻断完成结论 |
+| 安装后的 CLI | review 待复查退出 2；run 能执行命令与文件检查、导出报告，保留可选失败且不混入必要项结果 |
+| 实际文档预览 | 示例 PDF 和 LibreOffice 渲染的 Word 页面中文、流程图可读，无截断；Word 与 PDF 版式不同 |
+| Skill | 两个入口通过官方 quick_validate 检查；增加 Codex/Claude Code 的目录说明 |
+
+这轮没有做付费模型驱动的自动写作质量评测，也没有运行 Claude Code 完整会话。示例的组织与语义由当前 Agent 人工复核；review 的数字与链接提示不等于事实验证。验收的自动结论只覆盖声明的必要检查。

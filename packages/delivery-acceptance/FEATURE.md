@@ -18,10 +18,13 @@ flowchart TD
 | src/storage.js | 路径检查、有限范围快照、原子新增记录 |
 | src/index.js | 合同验证、检查执行、观察与报告判断 |
 | src/cli.js | CLI、退出码和 Skill 安装 |
-| src/dsh.js | 固定 workspaceRoot 的五个工具与 Skill |
+| src/dsh.js | 固定 workspaceRoot 的六个工具与 Skill |
 | skills/delivery-acceptance | 原始需求、验证适配、遗漏检查与修复循环 |
+| tests/batch.test.js | 批量选择、合同变动中止、缺口摘要与证据过期 |
 | tests/acceptance.test.js | 真实进程、过期、手工观察、路径、锁、CLI、上游哈希 |
 
 报告与记录通过同一批次锁避免竞争；命令前后比较 scope 内容，修改时结果 stale。记录绑定目标根目录和合同，不能直接挪到其他项目当作有效证据。每项最后一次记录决定当前状态，历史不覆盖删除。
 
 manual 正向结果和 derived 条件不能自动组成完成结论。自动 verified-within-scope 不保证需求覆盖完整，host 仍负责检查语义；没有防篡改、生产状态认证或人工签收。命令不沙箱，运行范围由用户任务和宿主权限决定。退出码 0 仅证明已配置断言，不替代实际业务证据。
+
+v0.2 批量执行由 runChecks 协调：预先校验全部 ID 和 contractHash，每次执行前核对合同版本，按顺序保留证据并汇总报告。overview 将必要项缺口与可选问题分开；不改变原有保守验收状态。

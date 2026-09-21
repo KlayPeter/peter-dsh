@@ -14,7 +14,7 @@ Agent 说“完成了”，你还想知道：需求有没有漏？功能实际�
 | 导出的文件是否正常 | 检查产物，并由 Agent 实际打开复查字体、图表和分页 |
 | Agent 有没有漏需求 | 将原始需求逐项对应到证据，列出未检查和无法检查的部分 |
 
-当前 v0.1.0 支持 DeepSeek Harness、独立 CLI 和通用 Skill。不需要额外模型 API：当前 Agent 判断需求与证据是否匹配，程序执行检查并记录结果。
+当前 v0.2.0 支持 DeepSeek Harness、独立 CLI 和通用 Skill。不需要额外模型 API：当前 Agent 判断需求与证据是否匹配，程序执行检查并记录结果。
 
 ## 安装到 DeepSeek Harness
 
@@ -29,7 +29,7 @@ cd "$HOME/.local/share/peter-dsh/source"
 npm ci
 mkdir -p "$HOME/.local/share/peter-dsh/packages"
 npm pack --workspace @klaypeter/delivery-acceptance --pack-destination "$HOME/.local/share/peter-dsh/packages"
-dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-delivery-acceptance-0.1.0.tgz"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-delivery-acceptance-0.2.0.tgz"
 ```
 
 已经下载仓库的用户直接进入原目录。`web` 改成你平时使用的 profile；没有 pnpm 时先执行 `npm install -g pnpm`。
@@ -51,9 +51,15 @@ dsh --profile web
 
 工具不会自动获得其他任务的聊天记录；原始需求不在当前会话时，请提供需求文字或文件。安装后可用 `dsh plugin --profile web list --depth 0` 检查包，并让 Agent 调用 `acceptance_start` 建立一个验收计划，确认工具加载；start 不执行检查命令。
 
+## 你说任务，Agent 负责跑检查
+
+不需要你写 JSON 或逐个调用工具。Agent 根据原始需求和项目实际内容整理检查项，核对将执行的命令，再一次运行选定的检查。结果先回答“能否确认完成、还差什么”，完整日志放在报告里。
+
+已有项目回归脚本或 AI Init 的 project-check 时，可以复用为检查入口；仍会单独核对安装、实际使用和必要交付物。内容交付的复查结果也可作为线索，不能直接当作文稿已验收。
+
 ## 报告长什么样？
 
-下面是一份示意，实际结果取决于项目和证据：
+报告先展示必要项的通过、失败和待核实数量，以及优先处理的缺口，再展示完整明细。下面是一份示意，实际结果取决于项目和证据：
 
 | 验收项 | 状态 | 依据或缺口 |
 | --- | --- | --- |
@@ -91,7 +97,7 @@ report-<id>/
 
 ```sh
 npm pack --workspace @klaypeter/delivery-acceptance
-npm install -g ./klaypeter-delivery-acceptance-0.1.0.tgz
+npm install -g ./klaypeter-delivery-acceptance-0.2.0.tgz
 peter-accept install-skill --target /path/to/your-project/.agents/skills
 ```
 
@@ -104,7 +110,10 @@ peter-accept install-skill --target /path/to/your-project/.agents/skills
 peter-accept start --root /path/to/project --contract ./acceptance.json
 # 把 RUN_ID 换成上一步返回的实际值
 peter-accept inspect --root /path/to/project --run RUN_ID
-# 核对合同中的命令后执行某一项
+# 核对合同后，从 inspect 输出取得 contractHash，替换 HASH
+# C1、C2 换成当前合同中要执行的自动检查 ID
+peter-accept run --root /path/to/project --run RUN_ID --criteria C1,C2 --contract-hash HASH --export
+# 单项复验也可以用 check
 peter-accept check --root /path/to/project --run RUN_ID --criterion C1
 # 记录当前宿主的观察（正向自述仍待复核）
 peter-accept observe --root /path/to/project --run RUN_ID --criterion C3 \
@@ -113,7 +122,11 @@ peter-accept observe --root /path/to/project --run RUN_ID --criterion C3 \
 peter-accept report --root /path/to/project --run RUN_ID --export
 ```
 
-report 退出码：0 为声明范围内必要自动检查通过，2 为证据不足，3 为必要项失败，1 为操作错误。check 非通过时退出 2。
+run 一次接受 1–10 个不同的自动检查 ID，不接受 manual。执行前检查完整选择和合同版本；合同变动时停止，普通检查失败时继续收集其他项的结果。contractHash 只用于版本校验，不代表授权。
+
+run / report 退出码：0 为声明范围内必要自动检查通过，2 为证据不足，3 为必要项失败，1 为操作错误。check 非通过时退出 2。
+
+Codex 项目 Skill 使用 `.agents/skills`；Claude Code 使用 `.claude/skills`，将上方 install-skill 的 `--target` 换成对应目录即可。更新后刷新或重启 Agent；已有同名 Skill 先保存自定义修改再替换。dsh 的插件安装已注册 Skill，无需重复复制。
 
 ## 合同里的字段
 
@@ -140,6 +153,7 @@ scope 必须包含影响检查意义的代码、测试与配置。目录会递�
 | --- | --- |
 | acceptance_start | 建立验收合同，不执行检查 |
 | acceptance_inspect | 查看合同及将执行的命令 |
+| acceptance_run | 一次执行选定检查并导出报告，先展示必要项缺口 |
 | acceptance_check | 执行指定检查并保存原始证据 |
 | acceptance_observe | 记录实际观察、失败或环境限制 |
 | acceptance_report | 检查证据是否过期，生成两种格式的报告 |
@@ -165,3 +179,7 @@ scope 必须包含影响检查意义的代码、测试与配置。目录会递�
 运行 `npm test --workspace @klaypeter/delivery-acceptance` 验证状态判断、证据过期、失败、锁与 CLI。真实 dsh 服务验证脚本为仓库中的 `scripts/test-acceptance-harness.mjs`。未做模型驱动的全流程验收评测。
 
 原创代码 MIT，第三方资料许可见 [THIRD_PARTY.md](THIRD_PARTY.md)，实现设计见 [FEATURE.md](FEATURE.md)。
+
+## 升级
+
+在原插件仓库目录执行 `git pull`、`npm ci`，再按安装章节重新打包并用 `dsh plugin --profile web add` 安装 v0.2.0 包，最后重启相同 profile。原有批次仍可读取；先 inspect 获取当前 contractHash，再调用新的批量检查工具。独立 Skill 用户需保存自定义修改后更新 Skill 目录。

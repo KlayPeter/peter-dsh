@@ -3,11 +3,12 @@
 将同一份定稿 Markdown 用于全部输出格式。CLI 不调用模型，不重写原文。
 
 ```sh
-peter-deliver check --input final.md --type design
+# 改写后对照原稿；原样排版可改用 check --input final.md
+peter-deliver review --input final.md --original notes.md --type design
 peter-deliver export --input final.md --type design --formats html,pdf,docx --out delivery-v1
 ```
 
-源码仓库开发时可用 `npm run deliver -- ...`，或者 `node packages/content-delivery/src/cli.js ...`。Harness 工具可用时优先 `delivery_check` 与 `delivery_export`。
+源码仓库开发时可用 `npm run deliver -- ...`，或者 `node packages/content-delivery/src/cli.js ...`。Harness 工具可用时优先 `delivery_review` 与 `delivery_export`。
 
 HTML 和普通 Word 不需要浏览器；PDF 或包含 Mermaid 的任何导出需要先运行 `peter-deliver setup-browser`。也可设置 PETER_DELIVERY_CHROMIUM 指向本机 Chromium 可执行文件。
 
@@ -20,3 +21,5 @@ HTML 和普通 Word 不需要浏览器；PDF 或包含 Mermaid 的任何导出�
 交付前打开 HTML，并检查 PDF／Word 的页面：中文字体、图中文字、长表格、换页、代码、链接。结构自动检查通过不代替视觉与读者检查。
 
 v0.1 支持常规 Markdown 标题、段落、强调、删除线、引用、嵌套列表、表格、链接、代码和图片。暂不提供原生数学公式、脚注、复杂 HTML 布局或 Word 修订功能；不要向用户承诺这些能力。
+
+review 是只读复查：退出码 0 表示机械检查无提示，2 表示需复查，1 表示阻断或操作错误。数字和链接的集合对照不理解语义，也不检查代码中的数字；同数字对应错对象可能漏检，不同写法可能误报。必须由 Agent 对照上下文核实。原样排版模式可直接 check，不必改写或增加复查产物。

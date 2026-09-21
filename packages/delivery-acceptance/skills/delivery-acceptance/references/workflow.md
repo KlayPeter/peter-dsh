@@ -21,7 +21,7 @@ schemaVersion=1；task 是任务原文或忠实摘要，source 描述来自哪�
 - artifact：artifact 是 scope 内相对路径，检查非空普通文件，可选 contains。只证明这些机械条件，不声称质量。
 - manual：用浏览器/人工/外部工具检查；observe 的 note 写预期、实际、来源和限制，artifact 可附本地截图或日志。正向观察仍为 needs-review，负向为 failed，环境不足为 blocked。
 
-CLI 用 --contract 读取 JSON；dsh start 的 contractJson 是 JSON 字符串。先 inspect，再 check 指定 ID。JSON 示例随 npm 包 examples/acceptance.json 提供。
+CLI 用 --contract 读取 JSON；dsh start 的 contractJson 是 JSON 字符串。先 inspect 核对内容，再用 run 执行选定 ID；单项重试仍用 check。JSON 示例随 npm 包 examples/acceptance.json 提供。
 
 ## 证据有效性
 
@@ -34,3 +34,9 @@ CLI 用 --contract 读取 JSON；dsh start 的 contractJson 是 JSON 字符串�
 文件哈希不覆盖数据库、远程服务、权限和浏览器实时状态；涉及这些内容需当前环境重新验证。证据为本地可编辑记录，没有数字签名，不能抵抗同权限篡改。不可凭这套记录认证第三方提交的日志真实性。
 
 运行命令不在沙箱中，可能写文件或访问网络。用户要求验收并不等于授权付款、部署或删除数据；使用本地测试环境和适当权限。输出保存在项目 .delivery-acceptance 下，可能含敏感日志，先检查再分享或提交。
+
+## 一次执行多个检查
+
+acceptance_run 接收 run、criteria（1–10 个明确的非 manual ID）和 inspect 返回的 contractHash，顺序执行并导出报告。CLI 使用 `peter-accept run --root /path/to/project --run RUN_ID --criteria C1,C2 --contract-hash HASH --export`。全部选项会在执行前验证，合同版本变动则停止；哈希只是版本校验，不代表用户授权或安全认证。失败项保留失败证据，其他选定检查继续；人工项不自动通过，也不包含在批量参数内。
+
+overview 给出必要项的总数、通过、失败、待核实和 gaps。优先依据 gaps 向用户说明缺口，不用原始 JSON 充当最终答复。多个检查之间改变源码会使早先的证据过期，必须以最后生成的报告状态为准。

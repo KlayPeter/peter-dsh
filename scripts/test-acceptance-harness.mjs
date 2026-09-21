@@ -24,7 +24,7 @@ try {
   await ctx.plugin(ToolRuntime);
   await ctx.plugin(SkillRegistry);
   fiber = await ctx.plugin(plugin, { workspaceRoot: root });
-  assert.equal(ctx.tools.schemas().length, 5);
+  assert.equal(ctx.tools.schemas().length, 6);
   assert.ok(
     (await ctx.skills.list()).some((s) => s.name === "delivery-acceptance"),
   );
@@ -57,7 +57,7 @@ try {
       },
     ],
   };
-  const { run } = await call("acceptance_start", {
+  const { run, contractHash } = await call("acceptance_start", {
     contractJson: JSON.stringify(contract),
   });
   assert.equal(
@@ -69,6 +69,7 @@ try {
     "incomplete-evidence",
   );
   await call("acceptance_check", { run, criterion: "DOC" });
+  await call("acceptance_run", { run, criteria: ["DOC"], contractHash });
   const result = await call("acceptance_report", { run });
   assert.equal(result.verdict, "verified-within-scope");
   assert.match(await readFile(result.files.markdown, "utf8"), /已通过/);
@@ -87,7 +88,7 @@ try {
   assert.equal(ctx.tools.schemas().length, 0);
   assert.equal((await ctx.skills.list()).length, 0);
   console.log(
-    "Acceptance Harness: five tools, evidence/report, manual gaps, Skill registration and unload passed.",
+    "Acceptance Harness: six tools, evidence/report, manual gaps, Skill registration and unload passed.",
   );
 } finally {
   await fiber?.dispose();

@@ -4,6 +4,7 @@ import { readFile, readdir, mkdir, cp, rm } from "node:fs/promises";
 import path from "node:path";
 import {
   start,
+  runChecks,
   inspect,
   check,
   observe,
@@ -12,6 +13,7 @@ import {
   skillRoot,
 } from "./index.js";
 const help = `peter-accept start --root ./project --contract ./acceptance.json
+peter-accept run --root ./project --run <run-id> --criteria C1,C2 --contract-hash <hash> [--export]
 peter-accept inspect --root ./project --run <run-id>
 peter-accept check --root ./project --run <run-id> --criterion C1
 peter-accept observe --root ./project --run <run-id> --criterion C2 --note "Observed UI" --outcome pass --artifact screenshots/ui.png
@@ -29,6 +31,8 @@ try {
         "contract",
         "run",
         "criterion",
+        "criteria",
+        "contract-hash",
         "note",
         "outcome",
         "artifact",
@@ -62,6 +66,19 @@ try {
         root: v.root,
         contract: JSON.parse(await readFile(v.contract, "utf8")),
       });
+    } else if (p[0] === "run") {
+      result = await runChecks({
+        ...args,
+        criteria: v.criteria?.split(",").map((x) => x.trim()),
+        contractHash: v["contract-hash"],
+        export: v.export,
+      });
+      process.exitCode =
+        result.verdict === "verified-within-scope"
+          ? 0
+          : result.verdict === "not-complete"
+            ? 3
+            : 2;
     } else if (p[0] === "inspect") result = await inspect(args);
     else if (p[0] === "check") {
       result = await check(args);

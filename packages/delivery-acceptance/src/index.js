@@ -112,17 +112,27 @@ export async function start({ root, contract }) {
     run,
     contract,
     status: "planned",
+    contractHash: hash(json(contract)),
     next: "Review scope, criteria and exact commands against the original user task before executing. No checks have run.",
   };
 }
 export async function inspect({ root, run }) {
   root = await rootPath(root);
-  return { run, contract: await contractAt(root, run) };
+  const contract = await contractAt(root, run);
+  return { run, contract, contractHash: hash(json(contract)) };
 }
-export async function check({ root, run, criterion, signal }) {
+export async function check({
+  root,
+  run,
+  criterion,
+  signal,
+  expectedContractHash,
+}) {
   root = await rootPath(root);
   const c = await contractAt(root, run),
     r = c.criteria.find((x) => x.id === criterion);
+  if (expectedContractHash && hash(json(c)) !== expectedContractHash)
+    throw new Error("Contract changed; inspect and review again.");
   if (!r) throw new Error("Unknown criterion");
   if (r.method === "manual")
     throw new Error("Manual criteria require an observation; use observe");
@@ -406,6 +416,38 @@ export async function report({ root, run }) {
                     : "Run the criterion check",
         })),
     };
+    result.overview = {
+      headline:
+        verdict === "not-complete"
+          ? "还没完成：必要项存在失败"
+          : verdict === "incomplete-evidence"
+            ? "还不能确认完成：必要证据不齐"
+            : "声明范围内的必要自动检查通过，仍需核对需求覆盖",
+      required: {
+        total: required.length,
+        passed: required.filter((r) => r.status === "passed").length,
+        failed: required.filter((r) => r.status === "failed").length,
+        pending: required.filter(
+          (r) => !["passed", "failed"].includes(r.status),
+        ).length,
+      },
+      gaps: required
+        .filter((r) => r.status !== "passed")
+        .map((r) => ({
+          id: r.id,
+          requirement: r.requirement,
+          status: r.status,
+          reason: r.reason,
+          next: result.next.find((n) => n.id === r.id)?.action,
+        })),
+      optionalIssues: rows
+        .filter((r) => !r.required && r.status !== "passed")
+        .map((r) => ({
+          id: r.id,
+          status: r.status,
+          requirement: r.requirement,
+        })),
+    };
     const labels = {
       passed: "已验证",
       failed: "未通过",
@@ -417,7 +459,7 @@ export async function report({ root, run }) {
       "not-complete": "尚未完成：存在必要项失败",
       "incomplete-evidence": "证据不足：尚不能确认完成",
     };
-    result.markdown = `# 交付验收报告\n\n任务：${esc(c.task)}\n\n需求来源：${esc(c.source)}\n\n结论：${labels[verdict]}\n\n检查范围：${c.scope.map(esc).join("、")}\n\n生成时间：${result.generatedAt}\n\n| 验收项 | 预期结果 | 必须 | 状态 | 依据或缺口 | 证据 |\n| --- | --- | --- | --- | --- | --- |\n${rows.map((r) => `| ${esc(r.id + ": " + r.requirement)} | ${esc(r.expected)} | ${r.required ? "是" : "否"} | ${labels[r.status]} | ${esc(r.reason)} | ${r.evidenceId ? `[记录](../evidence/${r.evidenceId}.json)` : "无"} |`).join("\n")}\n\n## 下一步\n\n${result.next.map((x) => "- " + esc(x.id + ": " + x.action)).join("\n") || "声明范围内的必要检查已通过；当前 Agent 仍须核对需求覆盖和证据是否适用，再说明完成范围。"}\n\n## 验证边界\n\n- 结论仅覆盖声明的验收项和文件范围；未纳入的需求不能算作已验证。\n- 命令退出成功、文件存在或文字匹配，不证明未测试的行为或文档质量。\n- 本地证据可被编辑，不是防篡改认证；远程环境变化不在文件摘要的检测范围内。\n`;
+    result.markdown = `# 交付验收报告\n\n任务：${esc(c.task)}\n\n需求来源：${esc(c.source)}\n\n结论：${labels[verdict]}\n\n必要项：${required.length} 项；已验证 ${result.overview.required.passed} 项；失败 ${result.overview.required.failed} 项；待核实 ${result.overview.required.pending} 项。\n\n优先处理：${result.overview.gaps.map((r) => esc(r.id + "：" + r.requirement) + "（" + labels[r.status] + "）").join("；") || "无必要项缺口，仍需检查是否遗漏用户需求。"}\n\n检查范围：${c.scope.map(esc).join("、")}\n\n生成时间：${result.generatedAt}\n\n| 验收项 | 预期结果 | 必须 | 状态 | 依据或缺口 | 证据 |\n| --- | --- | --- | --- | --- | --- |\n${rows.map((r) => `| ${esc(r.id + ": " + r.requirement)} | ${esc(r.expected)} | ${r.required ? "是" : "否"} | ${labels[r.status]} | ${esc(r.reason)} | ${r.evidenceId ? `[记录](../evidence/${r.evidenceId}.json)` : "无"} |`).join("\n")}\n\n## 下一步\n\n${result.next.map((x) => "- " + esc(x.id + ": " + x.action)).join("\n") || "声明范围内的必要检查已通过；当前 Agent 仍须核对需求覆盖和证据是否适用，再说明完成范围。"}\n\n## 验证边界\n\n- 结论仅覆盖声明的验收项和文件范围；未纳入的需求不能算作已验证。\n- 命令退出成功、文件存在或文字匹配，不证明未测试的行为或文档质量。\n- 本地证据可被编辑，不是防篡改认证；远程环境变化不在文件摘要的检测范围内。\n`;
     return result;
   } finally {
     const { unlink } = await import("node:fs/promises");
@@ -445,4 +487,51 @@ export async function exportReport(options) {
       markdown: path.join(dir, "report.md"),
     },
   };
+}
+
+export async function runChecks({
+  root,
+  run,
+  criteria,
+  contractHash,
+  signal,
+  export: save = false,
+}) {
+  if (
+    !Array.isArray(criteria) ||
+    !criteria.length ||
+    criteria.length > 10 ||
+    new Set(criteria).size !== criteria.length
+  )
+    throw new Error("Select 1–10 distinct, reviewed criterion IDs.");
+  if (!/^[a-f0-9]{64}$/.test(contractHash || ""))
+    throw new Error(
+      "Provide contractHash from start or inspect after reviewing commands.",
+    );
+  const current = await inspect({ root, run });
+  if (current.contractHash !== contractHash)
+    throw new Error("Contract changed; inspect and review again.");
+  // Validate the entire selection before executing any command.
+  for (const id of criteria) {
+    const criterion = current.contract.criteria.find((c) => c.id === id);
+    if (!criterion || criterion.method === "manual")
+      throw new Error("Unknown or manual criterion: " + id);
+  }
+  const executed = [];
+  for (const criterion of criteria) {
+    signal?.throwIfAborted();
+    const result = await check({
+      root,
+      run,
+      criterion,
+      signal,
+      expectedContractHash: contractHash,
+    });
+    executed.push({ criterion, status: result.status, evidenceId: result.id });
+  }
+  signal?.throwIfAborted();
+  if ((await inspect({ root, run })).contractHash !== contractHash)
+    throw new Error("Contract changed during checks; review before reporting.");
+  const result = await (save ? exportReport : report)({ root, run });
+  return { ...result, executed };
 }
