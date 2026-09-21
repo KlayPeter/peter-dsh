@@ -169,6 +169,8 @@ CLI 不提供虚假的“自动改写”：它返回指南、检查结构、导�
 
 本地开发入口为 `src/dsh.js`。裸模块 `@deepseek-ai/dsh-tools` 必须能从该文件所在目录解析；它是可选 peer，普通 CLI 不依赖 Harness。与已有 Harness 开发环境联调时，应使用其同版本依赖，不要随意安装另一个 SDK 版本。
 
+macOS 实测中，插件与 dsh 自带 sharp 可能出现 `GNotificationCenterDelegate` 重复原生库警告。本轮启动及三格式导出通过，但警告尚未消除；如遇崩溃，可先用独立 CLI 导出，并反馈 dsh 版本与错误日志。
+
 已在 Harness `0.1.0-rc.6` 的真实 Cordis、ToolRuntime、SkillRegistry 上验证注册和卸载。尚未执行付费模型驱动的端到端会话，也未承诺所有预览版 API 兼容。
 
 ## 图和格式

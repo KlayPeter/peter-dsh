@@ -49,4 +49,6 @@ npm test
 npm run test:integration  # 内容交付的格式集成测试，需要 Chromium
 ```
 
+三个插件已在隔离环境中按安装步骤实操验证，覆盖真实 dsh 工具调用与独立 CLI；已验证环境及限制见 [README 实操验证](docs/readme-verification.md)。
+
 原创代码采用 [MIT](LICENSE)。第三方资料保留各自许可证，见[内容交付](packages/content-delivery/THIRD_PARTY.md)、[项目 AI 配置](packages/project-ai-init/THIRD_PARTY.md)与[交付验收](packages/delivery-acceptance/THIRD_PARTY.md)的许可说明。
