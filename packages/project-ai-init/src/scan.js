@@ -1,5 +1,6 @@
 import { rootPath, readText, readdir, hash, json } from "./files.js";
 import path from "node:path";
+import { projectBriefing, sourcePriority } from "./briefing.js";
 const skip = new Set([
   ".git",
   "node_modules",
@@ -153,6 +154,7 @@ export async function inspectProject(root) {
               name: s,
               command: `${manager} run ${s}`,
               source: `${rel}#scripts.${s}`,
+              definition: pkg.scripts[s],
               verified: false,
             }))
           : [],
@@ -233,6 +235,17 @@ export async function inspectProject(root) {
     warnings,
     evidence,
   };
+  // Small, traceable excerpts guide the host's next reads; no script execution.
+  result.sources = [];
+  const candidates = [...new Set([...instructions, ...result.docs, ...files.filter(f => /^\.github\/workflows\/[^/]+\.ya?ml$/.test(f))])].sort((a, b) => sourcePriority(a) - sourcePriority(b) || a.localeCompare(b));
+  for (const file of candidates.slice(0, 12)) {
+    const text = await read(file);
+    const lines = text.split('\n');
+    const excerpt = lines.slice(0, 60).map((line, i) => `${i + 1}: ${line}`).join('\n');
+    result.sources.push({ path: file, excerpt: excerpt.slice(0, 4000), truncated: lines.length > 60 || excerpt.length > 4000 });
+  }
+  if (candidates.length > 12) warnings.push('Source excerpts limited to 12 files; read other relevant paths on demand.');
+  result.briefing = projectBriefing(result);
   result.fingerprint = hash(json({ files, evidence, skills: skillDirs }));
   return result;
 }

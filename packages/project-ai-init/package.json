@@ -1,6 +1,6 @@
 {
   "name": "@klaypeter/project-ai-init",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Project-aware AI configuration and small project starters with reusable preferences",
   "type": "module",
   "exports": {".": "./src/index.js", "./dsh": "./src/dsh.js"},

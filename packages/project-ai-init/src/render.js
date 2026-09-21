@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { json } from "./files.js";
+import { compactInstructions, factSections } from "./briefing.js";
 import { starterFiles } from "./starters.js";
 export const skillRoot = fileURLToPath(
   new URL("../skills/project-ai-init/", import.meta.url),
@@ -58,8 +59,9 @@ export async function loadPreset(value = "peter") {
 export async function getGuide({ mode = "existing" } = {}) {
   if (!["empty", "existing"].includes(mode))
     throw new Error("Guide mode must be empty or existing.");
+  const entry = (await readFile(new URL("../skills/project-ai-init/SKILL.md", import.meta.url), "utf8")).replace(/^---\n[\s\S]*?\n---\n/, "");
   const refs = ["shared", mode];
-  return (
+  return entry + "\n\n" + (
     await Promise.all(
       refs.map((f) =>
         readFile(
@@ -74,7 +76,7 @@ export async function getGuide({ mode = "existing" } = {}) {
   ).join("\n\n");
 }
 const esc = (s) => String(s).replaceAll("|", "\\|").replaceAll("\n", " ");
-export function renderFiles(scan, config, firstRun) {
+export function renderFiles(scan, config, firstRun, facts = { active: [], stale: [] }) {
   const { request, preset, targets, starter } = config;
   const files = {};
   const add = (path, content, kind = "managed") => {
@@ -86,7 +88,7 @@ export function renderFiles(scan, config, firstRun) {
         `| \`${esc(p.directory)}\` | \`${esc(c.command)}\` | \`${esc(c.source)}\` | 未执行 |`,
     ),
   );
-  const facts = `# 项目事实\n\n这些信息来自文件扫描；检查到脚本不代表运行通过。\n\n- 技术栈：${scan.languages.join("、") || "尚未从已有文件确定"}\n- 配置前状态：${scan.mode}\n- 原有指令：${
+  const projectText = `# 项目事实\n\n这些信息来自文件扫描；检查到脚本不代表运行通过。\n\n- 技术栈：${scan.languages.join("、") || "尚未从已有文件确定"}\n- 配置前状态：${scan.mode}\n- 原有指令：${
     scan.instructions
       .filter((f) => !["AGENTS.md", "CLAUDE.md"].includes(f))
       .map((f) => "`" + f + "`")
@@ -97,7 +99,8 @@ export function renderFiles(scan, config, firstRun) {
       .map((f) => "- `" + f + "`")
       .join("\n") || "未发现 README.md 或 FEATURE.md。"
   }\n\n## 已有 Skill\n\n${scan.skills.map((f) => "- `" + f + "`").join("\n") || "未发现项目级 Skill。"}\n\n## 扫描提示\n\n${scan.warnings.map((f) => "- " + f).join("\n") || "无。"}\n`;
-  add(".agent-context/project.md", facts);
+  if (config.layout === "expanded") {
+  add(".agent-context/project.md", projectText + "\n" + factSections(facts).join("\n\n"));
   add(
     ".agent-context/workflow.md",
     `# 工作偏好：${preset.id}\n\n${preset.description}\n\n当前用户要求与项目已有规则优先；本文件只补充未约定的部分。下列规则不授权任意推送、发布或外部操作。\n\n${preset.rules.map((s) => "- " + s).join("\n")}\n\n## 当前项目调整\n\n以下项目约定优先于上面的通用偏好，仅作用于本项目。\n\n${(config.projectRules || []).map((s) => "- " + s).join("\n") || "暂无；按实际项目补充，不修改可复用模板。"}\n\n## 需要的工具\n\n${preset.tools.join("、") || "无显式工具依赖"}。安装与连接状态需实际验证，不能由本文件证明已可用。\n`,
@@ -112,6 +115,9 @@ export function renderFiles(scan, config, firstRun) {
       ".agent-context/feature-docs.md",
       "# 功能文档维护\n\n优先使用项目现有功能索引和模板。没有既有约定时，在 docs/features/README.md 维护索引，在功能代码的主 Owner 目录维护 FEATURE.md。小项目可以只有一张功能卡。\n\n功能卡包含：目标与非目标、入口、实现流程、失败路径、代码地图、验证方式。流程或交互变化用内联 Mermaid 表达。不存在的数据、路径或测试不能写成已实现。功能文档与代码一起维护，不把业务介绍塞进 AGENTS.md。\n",
     );
+  } else {
+    add("AGENTS.md", compactInstructions(scan, config, facts), "block");
+  }
   if (targets.includes("claude")) add("CLAUDE.md", "@AGENTS.md\n", "block");
   if (firstRun && scan.mode === "empty" && starter !== "none") {
     for (const [file, content] of Object.entries(starterFiles(starter))) {

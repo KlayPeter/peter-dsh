@@ -35,6 +35,7 @@ const init = (root, args = {}) =>
     root,
     request: "配置当前项目的 AI 工作规则",
     starter: "none",
+    layout: "expanded",
     ...args,
   });
 test("ambiguous empty request produces questions and no files", async (t) => {
@@ -67,7 +68,7 @@ test("empty Node CLI is runnable; refresh discovers real scripts and is idempote
   execFileSync(process.execPath, ["--test"], { cwd: root, stdio: "pipe" });
   const s = await initialize({ root, operation: "sync" });
   assert.equal(s.status, "applied");
-  assert.match(await read(root, ".agent-context/project.md"), /npm run test/);
+  assert.match(await read(root, "AGENTS.md"), /npm run test/);
   const again = await initialize({ root, operation: "sync" });
   assert.deepEqual(again.changed, []);
   assert.equal((await doctor(root)).status, "checks-passed");

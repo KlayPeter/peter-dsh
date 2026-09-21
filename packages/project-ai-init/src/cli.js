@@ -12,12 +12,16 @@ import {
 } from "./index.js";
 import { inspectReference, exportPreferences } from "./preferences.js";
 import { toolingPlan, setupCodegraph } from "./tooling.js";
-const help = `Peter Project AI Init 0.2.0\n\npeter-ai inspect --root ./project\npeter-ai init --root ./project --request "做一个 Python 命令行工具" [--starter python-cli] [--targets dsh,codex,claude] [--preset peter|minimal] [--dry-run]\npeter-ai sync --root ./project [--request "新的目标"] [--dry-run]\npeter-ai doctor --root ./project\npeter-ai guide --mode empty|existing\npeter-ai install-skill --target .agents/skills\n\n--starter auto|none|node-cli|python-cli|static-web|docs\n--preset-file ./my-preferences.json  Custom preset with id, rules, featureDocs\nreference --root /reference/repo: read preference evidence\npreferences-export --root ./project: portable preset JSON\ntools --root ./project: required tools\nsetup-codegraph --root ./project [--dry-run]: install and index CodeGraph\n--project-rules-file ./project-rules.json: project-only rules array\nNo model calls or Git commits. setup-codegraph installs a pinned package and indexes the target.\n`;
+const help = `Peter Project AI Init 0.3.0\n\npeter-ai inspect --root ./project\npeter-ai init --root ./project --request "做一个 Python 命令行工具" [--starter python-cli] [--targets dsh,codex,claude] [--preset peter|minimal] [--dry-run]\npeter-ai sync --root ./project [--request "新的目标"] [--dry-run]\npeter-ai doctor --root ./project\npeter-ai guide --mode empty|existing\npeter-ai install-skill --target .agents/skills\n\n--layout compact|expanded  New projects default to compact + minimal
+--facts-file ./facts.json  Evidence-backed project notes [{text,sources:[path]}]
+--starter auto|none|node-cli|python-cli|static-web|docs\n--preset-file ./my-preferences.json  Custom preset with id, rules, featureDocs\nreference --root /reference/repo: read preference evidence\npreferences-export --root ./project: portable preset JSON\ntools --root ./project: required tools\nsetup-codegraph --root ./project [--dry-run]: install and index CodeGraph\n--project-rules-file ./project-rules.json: project-only rules array\nNo model calls or Git commits. setup-codegraph installs a pinned package and indexes the target.\n`;
 async function main() {
   const { values: v, positionals: p } = parseArgs({
     allowPositionals: true,
     options: {
       root: { type: "string" },
+      layout: { type: "string" },
+      "facts-file": { type: "string" },
       request: { type: "string" },
       preset: { type: "string" },
       "preset-file": { type: "string" },
@@ -47,11 +51,14 @@ async function main() {
     result = await doctor(v.root);
     if (["needs-attention", "not-initialized"].includes(result.status))
       process.exitCode = 1;
+    else if (result.status === "needs-review") process.exitCode = 2;
   } else if (["init", "sync"].includes(cmd)) {
     if (v.preset && v["preset-file"])
       throw new Error("Choose --preset or --preset-file.");
     const options = {
       root: v.root,
+      layout: v.layout,
+      projectFacts: v["facts-file"] ? JSON.parse(await readFile(v["facts-file"], "utf8")) : undefined,
       projectRules: v["project-rules-file"]
         ? JSON.parse(await readFile(v["project-rules-file"], "utf8"))
         : undefined,

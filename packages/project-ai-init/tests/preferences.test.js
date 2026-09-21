@@ -63,7 +63,7 @@ test("reference is read-only evidence; portable preset excludes project-specific
   assert.deepEqual(config.projectRules, ["This project uses npm"]);
   assert.ok(
     (
-      await readFile(path.join(root, ".agent-context/workflow.md"), "utf8")
+      await readFile(path.join(root, "AGENTS.md"), "utf8")
     ).includes("Use Chinese"),
   );
   assert.deepEqual((await exportPreferences(other)).rules, [

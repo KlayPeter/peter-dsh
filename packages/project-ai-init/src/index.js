@@ -13,6 +13,7 @@ import {
 } from "./files.js";
 import { inspectProject } from "./scan.js";
 import { chooseStarter, starterNames, starterFiles } from "./starters.js";
+import { resolveFacts, projectBriefing } from "./briefing.js";
 import { renderFiles, loadPreset } from "./render.js";
 export { inspectProject, loadPreset };
 export { inspectReference, exportPreferences } from "./preferences.js";
@@ -103,6 +104,8 @@ export async function planProject({
   request,
   preset,
   projectRules,
+  projectFacts,
+  layout,
   targets,
   starter,
   operation = "init",
@@ -140,7 +143,7 @@ export async function planProject({
   )
     throw new Error("Targets must be dsh, codex, claude.");
   targets = [...new Set(targets)].sort();
-  const preferences = await loadPreset(preset ?? previous.preset ?? "peter");
+  const preferences = await loadPreset(preset ?? previous.preset ?? "minimal");
   const selected = state
     ? {
         starter: previous.starter,
@@ -199,7 +202,13 @@ export async function planProject({
     )
   )
     throw new Error("Invalid projectRules.");
+  layout = layout ?? previous.layout ?? (state ? "expanded" : "compact");
+  if (!["compact", "expanded"].includes(layout)) throw new Error('Layout must be compact or expanded.');
+  const factSet = await resolveFacts(root, projectFacts ?? previous.projectFacts ?? [], { previous: projectFacts === undefined });
+  warnings.push(...factSet.stale.map(f => 'Fact evidence changed; reread sources before refreshing: ' + f.text));
   const config = {
+    layout,
+    projectFacts: factSet.facts,
     projectRules,
     schemaVersion: 1,
     request,
@@ -207,7 +216,7 @@ export async function planProject({
     targets,
     starter: selected.starter,
   };
-  const desired = renderFiles(scan, config, !state);
+  const desired = renderFiles(scan, config, !state, factSet);
   const entries = {};
   for (const [file, old] of Object.entries(state?.entries || {}))
     if (old.kind === "seed") entries[file] = old;
@@ -271,7 +280,7 @@ export async function planProject({
     if (!(file in desired) && old.kind !== "seed") await compare(file, null);
   const stateAfter = json({
     schemaVersion: 1,
-    generator: "@klaypeter/project-ai-init@0.2.0",
+    generator: "@klaypeter/project-ai-init@0.3.0",
     entries,
   });
   const stateBefore = await readText(root, STATE);
@@ -284,7 +293,7 @@ export async function planProject({
       beforeHash: stateBefore === null ? null : hash(stateBefore),
     });
   // Snapshot every managed destination, including unchanged ones, before application.
-  const guards = {};
+  const guards = { ...factSet.guards };
   for (const file of new Set([
     ...Object.keys(desired),
     ...Object.keys(state?.entries || {}),
@@ -298,6 +307,15 @@ export async function planProject({
     ...base,
     status: conflicts.length ? "conflict" : "ready",
     config,
+    summary: {
+      layout, preset: preferences.id,
+      commands: projectBriefing(scan).commands.length,
+      projectNotes: factSet.active.length,
+      staleNotes: factSet.stale.length,
+      cautions: projectBriefing(scan).cautions,
+      tools: preferences.tools,
+      validation: 'Commands discovered, not executed. Host must review definitions and run suitable checks.',
+    },
     changes,
     guards,
     conflicts,
@@ -354,6 +372,7 @@ export async function applyPlan(plan, { signal } = {}) {
       root,
       changed: completed.map((c) => ({ path: c.path, action: c.action })),
       warnings: plan.warnings,
+      summary: plan.summary,
       next:
         plan.mode === "empty" && plan.config.starter !== "none"
           ? "Scaffold created, business features are not implemented. Run its documented checks, then sync to refresh project facts."
@@ -413,10 +432,12 @@ export async function doctor(root) {
     }
   }
   let refresh = false,
+    staleNotes = 0,
     warnings = [];
   try {
     const plan = await planProject({ root, operation: "sync" });
     warnings = plan.warnings;
+    staleNotes = plan.summary?.staleNotes || 0;
     refresh = plan.changes.some((c) => c.path !== STATE);
     issues.push(
       ...plan.conflicts.filter(
@@ -429,12 +450,15 @@ export async function doctor(root) {
   return {
     status: issues.length
       ? "needs-attention"
+      : staleNotes
+        ? "needs-review"
       : refresh
         ? "refresh-available"
         : "checks-passed",
     issues,
     warnings,
     refreshAvailable: refresh,
+    staleNotes,
     limitation:
       "Checks ownership and detected configuration; does not execute commands or prove that every Agent loaded the instructions.",
   };

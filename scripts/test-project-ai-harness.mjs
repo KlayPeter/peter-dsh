@@ -87,6 +87,13 @@ try {
     (await run("ai_project_tooling", { action: "preview-codegraph" })).status,
     "ready",
   );
+  const factPlan = await run("ai_project_plan", {
+    request: "Node CLI", operation: "sync", layout: "compact",
+    projectFactsJson: JSON.stringify([{text:"CLI 入口为 src/cli.js。", sources:["src/cli.js"]}]),
+  });
+  assert.equal(factPlan.summary.projectNotes, 1);
+  await run("ai_project_apply", { planId: factPlan.planId });
+  assert.match(await readFile(path.join(root, "AGENTS.md"), "utf8"), /src\/cli.js/);
   await fiber.dispose();
   assert.equal(ctx.tools.schemas().length, 0);
   assert.equal((await ctx.skills.list()).length, 0);

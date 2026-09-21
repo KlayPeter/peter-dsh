@@ -45,7 +45,7 @@ test("CLI accepts custom preset and shows read-only guide", async (t) => {
   ]);
   assert.equal(r.status, 0, r.stderr);
   assert.match(
-    await readFile(path.join(root, ".agent-context/workflow.md"), "utf8"),
+    await readFile(path.join(root, "AGENTS.md"), "utf8"),
     /Prefer explicit interfaces/,
   );
   const guide = run(["guide", "--mode", "empty"]);
@@ -71,4 +71,16 @@ test("Skill install is self-contained and refuses overwrite", async (t) => {
     await readFile(path.join(root, "project-ai-init/SKILL.md"), "utf8"),
     original,
   );
+});
+
+test('CLI accepts compact facts and reports changed evidence as needs-review', async t => {
+  const root = await temp(t), data = await temp(t);
+  await writeFile(path.join(root,'README.md'),'# Actual project');
+  const facts = path.join(data,'facts.json');
+  await writeFile(facts,JSON.stringify([{text:'项目介绍在 README。',sources:['README.md']}]));
+  const r = run(['init','--root',root,'--request','Configure','--layout','compact','--facts-file',facts]);
+  assert.equal(r.status,0,r.stderr);
+  assert.equal(JSON.parse(r.stdout).summary.projectNotes,1);
+  await writeFile(path.join(root,'README.md'),'# Changed project');
+  assert.equal(run(['doctor','--root',root]).status,2);
 });

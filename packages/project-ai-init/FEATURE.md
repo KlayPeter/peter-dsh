@@ -29,6 +29,7 @@ flowchart TD
 | --- | --- |
 | src/preferences.js | 参考证据读取、可复用模板导出 |
 | src/tooling.js | 工具需求、固定版本 CodeGraph 安装与 MCP 覆盖层 |
+| src/briefing.js | 常用命令、项目提醒、来源版本与过期判断、compact 速查 |
 | src/scan.js | 有边界的文件清单、manifest 线索与命令来源 |
 | src/starters.js | 保守路由、四种零依赖骨架 |
 | src/render.js | 预设、规则入口与项目事实输出 |
@@ -45,3 +46,15 @@ config 是用户可编辑的来源，state 记录管理归属与基线。受管�
 测试地图：tests/project.test.js 覆盖行为与数据保护；tests/cli.test.js 覆盖安装包入口与退出状态；scripts/test-project-ai-harness.mjs 验证真实 SDK 注册、调用、计划失效、同步与卸载。用户参考项目只读预览验证了不同子项目的包管理器识别。
 
 偏好分两层：preset 是跨项目模板，projectRules 仅用于当前项目。参考仓库只读，语义提炼由宿主 Agent 完成，导出不包含项目调整。工具安装与配置写入是独立操作：CodeGraph 安装失败不回滚已下载依赖；完成索引后仍需宿主连接验证。
+
+## v0.3：默认轻量与项目证据
+
+新配置默认 compact + minimal：AGENTS.md 承载常用命令、执行目录、包管理器差异、阅读入口和必要偏好。更新元数据仍在 .ai-init，保留归属保护；expanded 用于明确需要拆分阅读的项目。v0.2 没有 layout 的配置按 expanded 处理，沿用原 preset，只有显式迁移才移除未修改的旧生成文件。
+
+projectFacts 是宿主 Agent 提炼的项目知识，包含 text 与本地来源路径、SHA-256。保存时读取真实来源，应用前再次校验；同步时来源改变或丢失，将该结论移至待核实，doctor 返回 needs-review。来源哈希不认证推理正确，也不证明测试通过。重新阅读后显式提交 projectFacts 才刷新基线；导出个人 preset 不含这些项目知识。
+
+inspect 提供有序的阅读入口、脚本真实定义和限量带行号摘录。优先根 README、功能索引与规则，再读 CI 和具体功能文档；只列前 12 个常用命令，保留目录，不把 setup/deploy 当默认执行项。所有命令未执行；宿主按用户任务审查并运行适当验证，结果不永久写成已通过。
+
+tests/compact.test.js 验证轻量默认、多工具链、来源过期与应用前变化、旧配置兼容迁移、未修改文件清理与手写保留、摘要截断、个人模板不携带项目知识。原 expanded 数据保护测试继续保留，CLI 与真实 dsh 工具参数也需要验证。
+
+本轮验证：29 项 AI Init 测试与全仓库 53 项测试通过；独立 tarball CLI 验证真实 v0.2 配置保留与显式 compact 迁移；Harness 0.1.0-rc.6 隔离 web profile 实际加载新版并调用 inspect、plan、apply、doctor，验证来源变化返回 needs-review。用户参考项目仅只读预览，未应用，也未执行其业务脚本。没有进行模型驱动的完整开发收益评测。

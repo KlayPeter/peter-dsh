@@ -68,13 +68,17 @@ export function apply(ctx, config = {}) {
     description: `Inspect existing files and stack in ${root}, without executing scripts. Read existing instructions before planning.`,
     parameters: {},
     async execute() {
-      return JSON.stringify(await inspectProject(root));
+      const scan = await inspectProject(root);
+      const { files, evidence, ...brief } = scan;
+      return JSON.stringify({ ...brief, fileCount: files.length });
     },
   });
   register({
     name: "ai_project_plan",
     description: `Plan AI configuration in ${root} from the user's actual request. Empty projects may get a small starter; existing projects keep their stack. Returns a preview and short-lived planId. No writes.`,
     parameters: {
+      layout: { type: "string", enum: ["compact", "expanded"] },
+      projectFactsJson: { type: "string", description: 'JSON array (max 12) of {text,sources:[relative path]}. Host-authored project relationships with actual code/doc sources. Source changes mark notes stale. Not test proof.' },
       request: { type: "string", required: true },
       presetJson: {
         type: "string",
@@ -104,6 +108,7 @@ export function apply(ctx, config = {}) {
       const plan = await planProject({
         root,
         ...args,
+        projectFacts: args.projectFactsJson ? JSON.parse(args.projectFactsJson) : undefined,
         preset: args.presetJson ? JSON.parse(args.presetJson) : args.preset,
         projectRules: args.projectRulesJson
           ? JSON.parse(args.projectRulesJson)
