@@ -1,16 +1,38 @@
-# Peter DSH · 给 Agent 用的实用插件
+# Peter DSH · 把重复交代的事，交给插件
 
-让 DeepSeek Harness（dsh）帮你把文档交付好、把项目的 AI 开发规则配好。一个仓库包含多个插件，按需安装，也可以全部安装。
+文档怎么写才容易读？换个项目，怎么让 Agent 继续按你的习惯开发？
 
-## 我可以用它做什么？
+Peter DSH 把这些重复工作做成可复用的插件：帮你整理内容、输出交付文件，也帮你配置项目、积累自己的开发习惯。支持 DeepSeek Harness（dsh），也提供其他 Agent 可用的 Skill 和命令行工具。
 
-| 你的需求 | 安装哪个插件 | 最后得到什么 |
-| --- | --- | --- |
-| 把笔记或资料整理成 PRD、说明文档、技术设计、博客或调研报告 | [内容交付 Content Delivery](packages/content-delivery/README.md) | Agent 优化后的内容、必要的图示，以及 HTML / PDF / 可编辑 Word |
-| 新项目快速起步，或让 Agent 理解已有项目的开发规则 | [项目 AI 配置 Project AI Init](packages/project-ai-init/README.md) | AGENTS.md、项目事实和工作偏好；空项目还可生成最小工程骨架 |
-| 检查需求是否实现、交付证据是否齐全 | 交付验收助手 | 尚在规划，暂不可安装 |
+[安装到 dsh](#安装到-deepseek-harness) · [内容交付](packages/content-delivery/README.md) · [项目 AI 配置](packages/project-ai-init/README.md)
 
-内容交付当前为 v0.1.0，项目 AI 配置为 v0.2.0，尚未发布到 npm。下面通过下载源码、打包、安装到 dsh 来使用。
+## 用它，把手头的事做完
+
+### 零散材料，整理成能拿去评审、分享的文档
+
+有了一堆笔记、需求和技术资料，却还要花时间梳理结构、补图、调格式？**内容交付**让 Agent 根据读者和用途组织内容，再把同一份定稿输出成 HTML、PDF 和可编辑 Word。
+
+- **开评审**：把需求整理成 PRD，讲清范围、流程和验收条件。
+- **讲明白**：把技术方案或知识点写成说明，配上必要的流程图、时序图和例子。
+- **发出去**：把资料整理成博客或调研报告，用网页分享、用 PDF 阅读、用 Word 继续编辑。
+
+> “把 notes.md 整理成给新同事看的技术说明，必要时加流程图，导出 HTML、PDF 和 Word。”
+
+[开始使用内容交付 →](packages/content-delivery/README.md)
+
+### 换一个项目，也能延续你的开发习惯
+
+每次都要重新告诉 Agent：先看哪些文档、怎么验证、功能说明放哪里？**项目 AI 配置**把这些习惯保存成可更新的个人模板，再结合当前项目的实际内容生成开发规则。
+
+- **从零开始**：明确目标后搭好支持的最小工程骨架，配上 Agent 工作规则。
+- **接手旧项目**：识别已有技术栈、命令和约定，保留代码与手写规则。
+- **越用越合手**：选现成预设，或从你喜欢的仓库提取习惯；以后修改偏好，再用于其他项目。需要的工具由安装流程和 Agent 继续配置、验证。
+
+> “参考我以前的仓库，提取开发习惯。按当前项目调整配置，并把需要的 MCP 装好。”
+
+[开始使用项目 AI 配置 →](packages/project-ai-init/README.md)
+
+两个插件可单独安装。内容交付当前为 v0.1.0，项目 AI 配置为 v0.2.0；尚未发布到 npm，下面从仓库打包安装。
 
 ## 安装到 DeepSeek Harness
 
@@ -108,20 +130,6 @@ dsh plugin --profile web list --depth 0
 
 如果提示没有工具，先确认安装与启动使用同一个 profile、已经重启，并查看 dsh 启动日志有无插件加载错误。仅让模型口头回答“已安装”不算验证。
 
-## 项目 AI 配置：选择自己的习惯，持续更新
-
-首次使用时可选择 Peter 预设、minimal 简洁预设、已有个人模板，或指定一个参考仓库。直接对 Agent 说：
-
-> 从我指定的仓库提取开发习惯，保存为 my-style 模板。按当前项目的实际技术栈调整配置，并帮我安装和连接规则里需要的 MCP。
-
-以后可以说：
-
-> 更新我的偏好：功能文档用中文。这个项目另外使用现有测试命令，不改其他项目。把更新后的个人模板导出给我复用。
-
-个人模板与当前项目调整分开保存。模板更新后，可在其他项目显式同步；不会悄悄改动所有仓库。CodeGraph 有内置安装器；其他工具由 Agent 按官方说明安装并验证，需要登录、凭据或重启时明确提示。详见[偏好与工具使用说明](packages/project-ai-init/README.md#选择自己的偏好并持续迭代)。
-
-已安装旧版本的用户，在仓库 `git pull`、`npm ci` 后重新执行上面的项目 AI 配置插件打包与安装命令，然后重启对应 dsh profile。旧项目的 `.ai-init/config.json` 会保留原来的偏好；要采用新 Peter 规则，明确要求“切换到当前 peter 预设并同步”。
-
 ## 不用 dsh，也能用吗？
 
 可以。两个插件都提供独立 CLI 和可安装的 Skill。支持读取 Skill、执行本地命令的 Agent 可以使用；安装 Skill 和安装 CLI 是两个步骤：
@@ -139,35 +147,17 @@ npm run deliver -- export --input packages/content-delivery/examples/design.md \
 
 结果在 `output/design-v1`。这条命令转换已有 Markdown；内容创作和表达优化由你正在使用的 Agent 完成。
 
-## 仓库组织
+## 后续计划
 
-```text
-packages/
-  content-delivery/       # 可独立打包：引擎、CLI、Harness 适配、Skill、示例
-    src/
-    skills/content-delivery/
-      SKILL.md           # 短入口：模式与类型路由
-      references/        # 共用表达、五类文档、图示、导出
-    vendor/              # 7 个上游 Skill 原文、许可证、版本与哈希
-    tests/
-    examples/
-  project-ai-init/       # 项目扫描、偏好、空项目骨架、更新与检查
-docs/                    # 维护文档
-scripts/                 # 仓库维护脚本
-```
+交付验收助手：把需求、实现和验证证据对应起来，帮助检查交付是否完整。尚未实现，暂不可安装。
 
-每个插件持有自己的运行依赖、Skill 和 README。现阶段的共用规则放在内容交付包内部；两个插件目前独立发布；通用代码达到实际复用需求时再提取共享包，避免让独立安装依赖仓库外文件。
+## 参与开发
 
-## 开发与来源
+两个插件分别位于 `packages/content-delivery` 和 `packages/project-ai-init`，各自包含实现、Skill、示例和使用说明。
 
 ```sh
 npm test
-npm run test:integration  # 需要 Chromium；Linux 还需浏览器系统依赖和中文字体
-npm pack --workspace @klaypeter/content-delivery
+npm run test:integration  # 内容交付的格式集成测试，需要 Chromium
 ```
 
-- [第三方 Skill 与许可](packages/content-delivery/THIRD_PARTY.md)
-
-Harness 包装方式参考 [Discussion #961](https://github.com/deepseek-ai/deepseek-harness/discussions/961) 和 [dsh-report-studio](https://github.com/ciceroyang/dsh-report-studio)，并按本机 Harness API 验证。没有复制其业务实现。
-
-原创代码采用 [MIT](LICENSE)；`vendor/` 内材料保留各自许可证。
+原创代码采用 [MIT](LICENSE)。第三方资料保留各自许可证，见[内容交付](packages/content-delivery/THIRD_PARTY.md)与[项目 AI 配置](packages/project-ai-init/THIRD_PARTY.md)的许可说明。
