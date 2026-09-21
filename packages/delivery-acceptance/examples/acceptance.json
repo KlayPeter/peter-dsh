@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "task": "交付一个能运行、能按说明使用的 Node CLI",
+  "source": "示例需求：CLI 支持 --help，并有安装使用说明。实际使用请替换为原始用户需求及后续修正。",
+  "scope": ["src", "tests", "package.json", "README.md"],
+  "criteria": [
+    {"id":"C1","requirement":"CLI 能显示帮助","expected":"退出码 0，stdout 包含 Usage","origin":"user","required":true,"method":"command","command":{"file":"node","args":["src/cli.js","--help"]},"stdoutIncludes":"Usage"},
+    {"id":"C2","requirement":"README 包含安装入口","expected":"非空 README.md 包含 npm install","origin":"user","required":true,"method":"artifact","artifact":"README.md","contains":"npm install"},
+    {"id":"C3","requirement":"新用户能照 README 完成操作","expected":"在独立目录照文档逐步安装并实际调用成功","origin":"user","required":true,"method":"manual"}
+  ]
+}

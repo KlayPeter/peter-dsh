@@ -6,3 +6,5 @@ output/
 .env
 .env.*
 !.env.example
+
+.delivery-acceptance/

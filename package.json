@@ -9,7 +9,8 @@
     "test": "npm test --workspaces --if-present",
     "test:integration": "npm run test:integration --workspace @klaypeter/content-delivery",
     "deliver": "node packages/content-delivery/src/cli.js",
-    "ai-init": "node packages/project-ai-init/src/cli.js"
+    "ai-init": "node packages/project-ai-init/src/cli.js",
+    "acceptance": "node packages/delivery-acceptance/src/cli.js"
   },
   "engines": {
     "node": ">=22"

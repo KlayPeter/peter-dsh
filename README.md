@@ -2,9 +2,9 @@
 
 文档怎么写才容易读？换个项目，怎么让 Agent 继续按你的习惯开发？
 
-Peter DSH 把这些重复工作做成可复用的插件：帮你整理内容、输出交付文件，也帮你配置项目、积累自己的开发习惯。支持 DeepSeek Harness（dsh），也提供其他 Agent 可用的 Skill 和命令行工具。
+Peter DSH 把这些重复工作做成可复用的插件：帮你整理内容、输出交付文件，也帮你配置项目、积累自己的开发习惯，并在交付前核对需求和证据。支持 DeepSeek Harness（dsh），也提供其他 Agent 可用的 Skill 和命令行工具。
 
-[安装到 dsh](#安装到-deepseek-harness) · [内容交付](packages/content-delivery/README.md) · [项目 AI 配置](packages/project-ai-init/README.md)
+[安装到 dsh](#安装到-deepseek-harness) · [内容交付](packages/content-delivery/README.md) · [项目 AI 配置](packages/project-ai-init/README.md) · [交付验收](packages/delivery-acceptance/README.md)
 
 ## 用它，把手头的事做完
 
@@ -32,7 +32,15 @@ Peter DSH 把这些重复工作做成可复用的插件：帮你整理内容、�
 
 [开始使用项目 AI 配置 →](packages/project-ai-init/README.md)
 
-两个插件可单独安装。内容交付当前为 v0.1.0，项目 AI 配置为 v0.2.0；尚未发布到 npm，下面从仓库打包安装。
+### Agent 说完成了，再核对一次需求和证据
+
+**交付验收助手**把“完成了”拆成可以核实的事项：需求有没有漏、功能有没有实际验证、证据是否对应最后一版。报告会列出通过项、失败项、待复核和环境限制，并给出下一步。
+
+> “按我这次的原始需求验收交付，逐项核实证据。先报告哪些完成、哪些还差，不修改代码。”
+
+[开始使用交付验收 →](packages/delivery-acceptance/README.md)
+
+三个插件可单独安装。内容交付与交付验收当前为 v0.1.0，项目 AI 配置为 v0.2.0；尚未发布到 npm，下面从仓库打包安装。
 
 ## 安装到 DeepSeek Harness
 
@@ -84,7 +92,16 @@ npm run deliver -- setup-browser
 
 `setup-browser` 下载 PDF 和 Mermaid 图渲染所需的 Chromium，需要联网，并应由运行 dsh 的同一系统账户执行。Linux 缺少浏览器依赖时，见[浏览器准备说明](packages/content-delivery/README.md#安装与第一次导出)。
 
-只需运行你要用的插件那一组命令；两组都运行就会安装两个插件。`.tgz` 是生成的安装包，`$PWD` 会自动取当前目录的绝对路径。仓库根目录包含多个包，不能把整个仓库当成一个 dsh 插件安装。
+**交付验收插件**
+
+在 `peter-dsh` 目录执行：
+
+```sh
+npm pack --workspace @klaypeter/delivery-acceptance
+dsh plugin --profile web add "$PWD/klaypeter-delivery-acceptance-0.1.0.tgz"
+```
+
+只需运行你要用的插件那一组命令，也可以全部安装。`.tgz` 是生成的安装包，`$PWD` 会自动取当前目录的绝对路径。仓库根目录包含多个包，不能把整个仓库当成一个 dsh 插件安装。
 
 ### 3. 进入目标项目，重启 dsh
 
@@ -115,6 +132,12 @@ dsh --profile web
 
 完成后在目标项目的 `delivery-v1` 目录查看 `document.html`、`document.pdf` 和 `document.docx`。再次交付请换一个新目录，例如 `delivery-v2`。
 
+安装了交付验收插件，可以说：
+
+> 使用 delivery-acceptance，对照这次需求检查任务是否真的完成。运行必要验证，保留证据，并输出验收报告。没有验证的项目明确列出来。
+
+报告保存在目标项目 `.delivery-acceptance/` 中。想让 Agent 继续修复，可明确说“验收到完成”；详见[验收用法和判断边界](packages/delivery-acceptance/README.md)。
+
 ### 5. 确认安装成功
 
 在终端查看对应 profile 的安装记录：
@@ -123,19 +146,21 @@ dsh --profile web
 dsh plugin --profile web list --depth 0
 ```
 
-应能看到你安装的 `@klaypeter/project-ai-init` 或 `@klaypeter/content-delivery`。这一步确认包已安装；再到重启后的 dsh 对话验证工具确实能调用：
+应能看到你安装的 `@klaypeter/project-ai-init`、`@klaypeter/content-delivery` 或 `@klaypeter/delivery-acceptance`。这一步确认包已安装；再到重启后的 dsh 对话验证工具确实能调用：
 
 - 项目 AI 配置：说“调用 ai_project_inspect，只检查当前项目，不修改文件”。应返回目录、已有文件与技术栈线索。
 - 内容交付：说“调用 delivery_guide，获取技术说明文档的表达优化指南”。应返回写作指南。
+- 交付验收：让 Agent 调用 acceptance_start 建立验收计划，应返回 run 编号；此时尚未运行检查。
 
 如果提示没有工具，先确认安装与启动使用同一个 profile、已经重启，并查看 dsh 启动日志有无插件加载错误。仅让模型口头回答“已安装”不算验证。
 
 ## 不用 dsh，也能用吗？
 
-可以。两个插件都提供独立 CLI 和可安装的 Skill。支持读取 Skill、执行本地命令的 Agent 可以使用；安装 Skill 和安装 CLI 是两个步骤：
+可以。三个插件都提供独立 CLI 和可安装的 Skill。支持读取 Skill、执行本地命令的 Agent 可以使用；安装 Skill 和安装 CLI 是两个步骤：
 
 - [内容交付：其他 Agent 安装与示例](packages/content-delivery/README.md#给其他-agent-使用)
 - [项目 AI 配置：其他 Agent 安装](packages/project-ai-init/README.md#其他-agent)
+- [交付验收：独立 CLI 与其他 Agent](packages/delivery-acceptance/README.md#独立-cli--其他-agent)
 
 只想试一下 Markdown 导出，也可以在本仓库直接运行：
 
@@ -147,17 +172,13 @@ npm run deliver -- export --input packages/content-delivery/examples/design.md \
 
 结果在 `output/design-v1`。这条命令转换已有 Markdown；内容创作和表达优化由你正在使用的 Agent 完成。
 
-## 后续计划
-
-交付验收助手：把需求、实现和验证证据对应起来，帮助检查交付是否完整。尚未实现，暂不可安装。
-
 ## 参与开发
 
-两个插件分别位于 `packages/content-delivery` 和 `packages/project-ai-init`，各自包含实现、Skill、示例和使用说明。
+三个插件分别位于 `packages/content-delivery`、`packages/project-ai-init` 和 `packages/delivery-acceptance`，各自包含实现、Skill、示例和使用说明。
 
 ```sh
 npm test
 npm run test:integration  # 内容交付的格式集成测试，需要 Chromium
 ```
 
-原创代码采用 [MIT](LICENSE)。第三方资料保留各自许可证，见[内容交付](packages/content-delivery/THIRD_PARTY.md)与[项目 AI 配置](packages/project-ai-init/THIRD_PARTY.md)的许可说明。
+原创代码采用 [MIT](LICENSE)。第三方资料保留各自许可证，见[内容交付](packages/content-delivery/THIRD_PARTY.md)、[项目 AI 配置](packages/project-ai-init/THIRD_PARTY.md)与[交付验收](packages/delivery-acceptance/THIRD_PARTY.md)的许可说明。

@@ -1,0 +1,3 @@
+- insert:
+    - id: peter-delivery-acceptance
+      name: '@klaypeter/delivery-acceptance/dsh'
