@@ -38,7 +38,17 @@ export async function loadPreset(value = "peter") {
     )
   )
     throw new Error("Invalid preset: provide id and up to 40 plain rules.");
+  if (
+    preset.tools !== undefined &&
+    (!Array.isArray(preset.tools) ||
+      preset.tools.length > 20 ||
+      preset.tools.some(
+        (x) => typeof x !== "string" || !/^[a-zA-Z0-9_.-]{1,64}$/.test(x),
+      ))
+  )
+    throw new Error("Invalid preset tools: use tool identifiers.");
   return {
+    tools: [...new Set(preset.tools || [])],
     id: preset.id,
     description: String(preset.description || ""),
     rules: preset.rules,
@@ -90,7 +100,7 @@ export function renderFiles(scan, config, firstRun) {
   add(".agent-context/project.md", facts);
   add(
     ".agent-context/workflow.md",
-    `# 工作偏好：${preset.id}\n\n${preset.description}\n\n当前用户要求与项目已有规则优先；本文件只补充未约定的部分。下列规则不授权任意推送、发布或外部操作。\n\n${preset.rules.map((s) => "- " + s).join("\n")}\n`,
+    `# 工作偏好：${preset.id}\n\n${preset.description}\n\n当前用户要求与项目已有规则优先；本文件只补充未约定的部分。下列规则不授权任意推送、发布或外部操作。\n\n${preset.rules.map((s) => "- " + s).join("\n")}\n\n## 当前项目调整\n\n以下项目约定优先于上面的通用偏好，仅作用于本项目。\n\n${(config.projectRules || []).map((s) => "- " + s).join("\n") || "暂无；按实际项目补充，不修改可复用模板。"}\n\n## 需要的工具\n\n${preset.tools.join("、") || "无显式工具依赖"}。安装与连接状态需实际验证，不能由本文件证明已可用。\n`,
   );
   add(
     "AGENTS.md",
@@ -129,7 +139,7 @@ export function renderFiles(scan, config, firstRun) {
   }
   add(
     ".gitignore",
-    ".ai-init/lock\nnode_modules/\n__pycache__/\n.venv/\n.env\n.env.*\n!.env.example\n",
+    ".ai-init/lock\n.ai-init/tooling.lock\n.ai-init/runtime/\n.ai-init/codegraph.dsh.json\n.codegraph/\nnode_modules/\n__pycache__/\n.venv/\n.env\n.env.*\n!.env.example\n",
     "block",
   );
   // This editable source is intentionally not managed by sync's content hash.

@@ -24,7 +24,7 @@ try {
   await ctx.plugin(ToolRuntime);
   await ctx.plugin(SkillRegistry);
   const fiber = await ctx.plugin(plugin, { workspaceRoot: root });
-  assert.equal(ctx.tools.schemas().length, 4);
+  assert.equal(ctx.tools.schemas().length, 7);
   assert.ok(
     (await ctx.skills.list()).some((x) => x.name === "project-ai-init"),
   );
@@ -63,6 +63,30 @@ try {
   });
   await run("ai_project_apply", { planId: refresh.planId });
   assert.equal((await run("ai_project_doctor")).status, "checks-passed");
+  const reference = await run("ai_preferences_reference", { root });
+  assert.ok(reference.sources.some((s) => s.path === "AGENTS.md"));
+  const portable = await run("ai_preferences_export");
+  const custom = await run("ai_project_plan", {
+    request: "Node CLI",
+    operation: "sync",
+    presetJson: JSON.stringify({
+      ...portable,
+      id: "custom",
+      rules: ["Write clear docs"],
+      tools: [],
+    }),
+    projectRulesJson: JSON.stringify(["Keep the existing Node runner"]),
+  });
+  await run("ai_project_apply", { planId: custom.planId });
+  assert.equal((await run("ai_preferences_export")).id, "custom");
+  assert.deepEqual(
+    (await run("ai_project_tooling", { action: "inspect" })).tools,
+    [],
+  );
+  assert.equal(
+    (await run("ai_project_tooling", { action: "preview-codegraph" })).status,
+    "ready",
+  );
   await fiber.dispose();
   assert.equal(ctx.tools.schemas().length, 0);
   assert.equal((await ctx.skills.list()).length, 0);

@@ -15,6 +15,8 @@ import { inspectProject } from "./scan.js";
 import { chooseStarter, starterNames, starterFiles } from "./starters.js";
 import { renderFiles, loadPreset } from "./render.js";
 export { inspectProject, loadPreset };
+export { inspectReference, exportPreferences } from "./preferences.js";
+export { toolingPlan, setupCodegraph } from "./tooling.js";
 export { getGuide, skillRoot } from "./render.js";
 const STATE = ".ai-init/state.json";
 const CONFIG = ".ai-init/config.json";
@@ -100,6 +102,7 @@ export async function planProject({
   root,
   request,
   preset,
+  projectRules,
   targets,
   starter,
   operation = "init",
@@ -186,7 +189,18 @@ export async function planProject({
         "这个空项目准备做什么、用什么技术栈？选择 node-cli / python-cli / static-web / docs；仅配置选 none。其他技术栈由当前 Agent 按需求搭建后，再按已有项目配置。",
       ],
     };
+  projectRules = projectRules ?? previous.projectRules ?? [];
+  if (
+    !Array.isArray(projectRules) ||
+    projectRules.length > 40 ||
+    projectRules.some(
+      (s) =>
+        typeof s !== "string" || s.length > 2000 || s.includes("peter-ai:"),
+    )
+  )
+    throw new Error("Invalid projectRules.");
   const config = {
+    projectRules,
     schemaVersion: 1,
     request,
     preset: preferences,
@@ -257,7 +271,7 @@ export async function planProject({
     if (!(file in desired) && old.kind !== "seed") await compare(file, null);
   const stateAfter = json({
     schemaVersion: 1,
-    generator: "@klaypeter/project-ai-init@0.1.0",
+    generator: "@klaypeter/project-ai-init@0.2.0",
     entries,
   });
   const stateBefore = await readText(root, STATE);

@@ -10,7 +10,7 @@
 | 新项目快速起步，或让 Agent 理解已有项目的开发规则 | [项目 AI 配置 Project AI Init](packages/project-ai-init/README.md) | AGENTS.md、项目事实和工作偏好；空项目还可生成最小工程骨架 |
 | 检查需求是否实现、交付证据是否齐全 | 交付验收助手 | 尚在规划，暂不可安装 |
 
-两个可用插件当前均为 v0.1.0，尚未发布到 npm。下面通过下载源码、打包、安装到 dsh 来使用。
+内容交付当前为 v0.1.0，项目 AI 配置为 v0.2.0，尚未发布到 npm。下面通过下载源码、打包、安装到 dsh 来使用。
 
 ## 安装到 DeepSeek Harness
 
@@ -41,14 +41,18 @@ npm ci
 
 下面以 **web** 为例：如果你平时用 `dsh web`，直接复制；如果用 `dsh --profile tui`，将命令中的 `web` 改成 `tui`。profile 是你启动 dsh 时选择的运行配置，插件只安装到指定配置中。
 
-**项目 AI 配置插件：**在刚才的 `peter-dsh` 目录执行：
+**项目 AI 配置插件**
+
+在刚才的 `peter-dsh` 目录执行：
 
 ```sh
 npm pack --workspace @klaypeter/project-ai-init
-dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.1.0.tgz"
+dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.2.0.tgz"
 ```
 
-**内容交付插件：**同样在 `peter-dsh` 目录执行：
+**内容交付插件**
+
+同样在 `peter-dsh` 目录执行：
 
 ```sh
 npm pack --workspace @klaypeter/content-delivery
@@ -104,6 +108,20 @@ dsh plugin --profile web list --depth 0
 
 如果提示没有工具，先确认安装与启动使用同一个 profile、已经重启，并查看 dsh 启动日志有无插件加载错误。仅让模型口头回答“已安装”不算验证。
 
+## 项目 AI 配置：选择自己的习惯，持续更新
+
+首次使用时可选择 Peter 预设、minimal 简洁预设、已有个人模板，或指定一个参考仓库。直接对 Agent 说：
+
+> 从我指定的仓库提取开发习惯，保存为 my-style 模板。按当前项目的实际技术栈调整配置，并帮我安装和连接规则里需要的 MCP。
+
+以后可以说：
+
+> 更新我的偏好：功能文档用中文。这个项目另外使用现有测试命令，不改其他项目。把更新后的个人模板导出给我复用。
+
+个人模板与当前项目调整分开保存。模板更新后，可在其他项目显式同步；不会悄悄改动所有仓库。CodeGraph 有内置安装器；其他工具由 Agent 按官方说明安装并验证，需要登录、凭据或重启时明确提示。详见[偏好与工具使用说明](packages/project-ai-init/README.md#选择自己的偏好并持续迭代)。
+
+已安装旧版本的用户，在仓库 `git pull`、`npm ci` 后重新执行上面的项目 AI 配置插件打包与安装命令，然后重启对应 dsh profile。旧项目的 `.ai-init/config.json` 会保留原来的偏好；要采用新 Peter 规则，明确要求“切换到当前 peter 预设并同步”。
+
 ## 不用 dsh，也能用吗？
 
 可以。两个插件都提供独立 CLI 和可安装的 Skill。支持读取 Skill、执行本地命令的 Agent 可以使用；安装 Skill 和安装 CLI 是两个步骤：
@@ -134,7 +152,7 @@ packages/
     tests/
     examples/
   project-ai-init/       # 项目扫描、偏好、空项目骨架、更新与检查
-docs/                    # 两个插件的调研与实现记录
+docs/                    # 维护文档
 scripts/                 # 仓库维护脚本
 ```
 
@@ -148,9 +166,6 @@ npm run test:integration  # 需要 Chromium；Linux 还需浏览器系统依赖�
 npm pack --workspace @klaypeter/content-delivery
 ```
 
-- [内容交付 Skill 调研](docs/content-delivery/skill-research.md)
-- [项目 AI 配置初始化 Skill 调研](docs/project-ai-init/skill-research.md)
-- [实现过程、验证与经验](docs/content-delivery/implementation.md)
 - [第三方 Skill 与许可](packages/content-delivery/THIRD_PARTY.md)
 
 Harness 包装方式参考 [Discussion #961](https://github.com/deepseek-ai/deepseek-harness/discussions/961) 和 [dsh-report-studio](https://github.com/ciceroyang/dsh-report-studio)，并按本机 Harness API 验证。没有复制其业务实现。

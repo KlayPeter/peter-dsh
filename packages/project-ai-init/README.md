@@ -2,7 +2,7 @@
 
 结合用户要解决的问题、项目现有内容和可复用偏好，生成可维护的 Agent 配置。空项目可以搭建最小工程骨架；已有项目保留代码与技术栈，补充实际项目事实和工作规则。
 
-v0.1.0 提供独立 CLI、通用 Skill 和 DeepSeek Harness 插件。不调用模型 API；当前 Agent 负责理解用户意图，程序负责扫描、规划和可靠写入。
+v0.2.0 提供独立 CLI、通用 Skill 和 DeepSeek Harness 插件。不调用模型 API；当前 Agent 负责理解用户意图，程序负责扫描、规划和可靠写入。
 
 ## 第一次使用：安装到 DeepSeek Harness
 
@@ -15,7 +15,7 @@ cd peter-dsh
 npm ci
 # 打包这个插件，安装到 web profile
 npm pack --workspace @klaypeter/project-ai-init
-dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.1.0.tgz"
+dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.2.0.tgz"
 ```
 
 如果平时用的是 `tui` 或其他 profile，把 `web` 换成对应名称。关闭旧 dsh，将下面路径换成**要配置的目标项目**，重新启动：
@@ -75,29 +75,78 @@ npm run ai-init -- init --root ./my-python-tool \
 
 `auto` 只识别少量明确的描述，不是通用自然语言理解模型。含否定、替代方案或无法确定技术栈时，需要 Agent 明确选择 `--starter`。只配置规则可选 `--starter none`。已有内容时任何非 none 骨架都会被拒绝。
 
-## Peter 预设从哪里来
+## 选择自己的偏好并持续迭代
 
-根据用户提供的参考项目规约提炼，见 [偏好提取记录](https://github.com/KlayPeter/peter-dsh/blob/main/docs/project-ai-init/preferences.md)。默认包括：
+首次使用，Agent 会让你选择：
 
-- 先理解目标与验收条件，改动聚焦、简洁优先。
-- 功能 Owner 目录维护 FEATURE.md，功能索引集中管理。
-- 功能变化同步文档，流程图使用内联 Mermaid。
-- 当前需求内小步解耦，不做无关大重构。
-- 验证与改动相称，不为形式要求制造测试。
-- 用户授权的独立完成节点，先验证再提交。
-- CodeGraph 可用时优先使用，不可用时可正常检索代码。
+| 选择 | 适合谁 |
+| --- | --- |
+| peter | 使用作者的功能文档、Mermaid、聚焦改动、验证及 CodeGraph 工作方式 |
+| minimal | 只需要少量通用开发规则 |
+| 个人模板 JSON | 已经积累了自己的习惯，希望在多个项目复用 |
+| 参考仓库 | 从你喜欢的项目中提取习惯，再形成个人模板 |
 
-不强制 Bun、React、业务目录结构或安装 CodeGraph；这些属于具体项目事实。也不默认安装 Git Hooks、配置权限白名单、推送或发布。
+可以直接说：
 
-其他人可以选择 `--preset minimal`，或自定义：
+> 参考 /path/to/reference-repo，提取我的开发习惯，保存成 my-style 模板。按当前项目已有技术栈配置，并把需要的工具装好。
+
+支持指定 Git 仓库地址，由当前 Agent 先检出到临时目录再读取；本地参考读取工具本身只接收目录路径。不会执行参考仓库的脚本或将其业务需求当成你的新任务。模板提炼由当前 Agent 完成，程序提供有来源的文本与项目线索。
+
+配置分为两层：
+
+- `preset`：跨项目复用的个人习惯，包含 `id`、`description`、`rules`、`featureDocs`、`tools`。
+- `projectRules`：只属于当前项目的调整。例如沿用当前测试入口、特定目录的文档约定。不会跟着个人模板导出。
+
+要修改偏好，直接说：
+
+> 以后功能文档统一用中文；这个项目额外遵守现有数据库迁移流程。更新配置，并导出我的个人模板。
+
+Agent 会合并变更、预览差异，再同步受管理的配置。原有手写内容仍然保留。导出的模板由你保存、分享；其他项目需要显式应用新模板，不会在后台一起被修改。
+
+CLI 用户（以下命令在仓库根执行）：
 
 ```sh
+# 读取参考资料，由当前 Agent 据此生成 my-style.json
+npm run ai-init -- reference --root /path/to/reference-repo
+# 使用个人模板配置目标项目
 npm run ai-init -- init --root /path/to/project \
-  --request "配置团队工作规则" \
-  --preset-file packages/project-ai-init/examples/preferences.json
+  --request "按当前项目配置" --preset-file ./my-style.json
+# 模板文件更新后同步到这个项目
+npm run ai-init -- sync --root /path/to/project --preset-file ./my-style.json
+# 导出当前个人模板；选一个新文件名，shell 重定向会覆盖已有文件
+node packages/project-ai-init/src/cli.js preferences-export \
+  --root /path/to/project > my-style-v2.json
 ```
 
-预设结构为 `id`、`description`、`rules`、`featureDocs`。初次生成后保存在目标项目 `.ai-init/config.json`，可以修改 `preset.rules` 再 sync，不必修改插件源码。
+也可直接编辑目标项目 `.ai-init/config.json` 中的 `preset` 或 `projectRules`，再 sync。`--project-rules-file` 接收 JSON 字符串数组，用于仅更新当前项目约定。CLI 仍可使用 `--preset peter` / `--preset minimal` 显式选择；仅使用 CLI 且未指定时默认 peter。
+
+## 自动准备规则里需要的工具
+
+Agent 先检查现有 MCP 是否能调用，缺少时完成安装、项目初始化和当前 Agent 的连接配置。**软件已安装、索引已建立、MCP 已连接是三个不同状态**，需要逐步验证。
+
+Peter 预设需要 CodeGraph，内置配方固定为 [@colbymchenry/codegraph](https://github.com/colbymchenry/codegraph) 1.6.0。不会因为遇到另一个同名项目就混用安装命令。安装到目标项目 `.ai-init/runtime`，不修改所有 Agent 的全局配置。
+
+```sh
+npm run ai-init -- tools --root /path/to/project
+npm run ai-init -- setup-codegraph --root /path/to/project --dry-run
+npm run ai-init -- setup-codegraph --root /path/to/project
+```
+
+`setup-codegraph` 实际下载软件包、执行安装与版本检查、建立代码索引，并生成 `.ai-init/codegraph.dsh.json`。该覆盖层包含本机路径，应保持在 Git 忽略范围内。首次需要网络；目前安装器面向 macOS / Linux，Windows 可由宿主按上游官方步骤安装。
+
+dsh 用户还需要 MCP 桥接包，并在下次启动时加载覆盖层。当前已验证 Harness 0.1.0-rc.6；`web` 换成实际 profile，其他 Harness 版本请匹配桥接包版本：
+
+```sh
+dsh plugin --profile web add @deepseek-ai/dsh-mcp-client@0.1.0-rc.6
+cd /path/to/project
+dsh --profile web --patch .ai-init/codegraph.dsh.json
+```
+
+已有其他启动参数请保留。Agent 可以帮你完成安装与配置，但无法在当前会话中无缝重启自身服务；需要重启时会给出具体命令。重启后实际调用 `mcp__codegraph__codegraph_explore`，确认能查询当前项目再报告就绪。
+
+其他 MCP、Codex 或 Claude 的连接配置由当前 Agent 按对应官方说明安装和合并，保留已有服务。依赖登录或 API Key 时提示缺失项，不把凭据写进模板。init/sync 本身只写项目配置；自动安装流程由 Skill 编排，CLI 用户需执行上述安装步骤。
+
+安装失败会保留已下载依赖供排查，不影响偏好文件，也不会冒充安装成功。`doctor` 检查配置归属和漂移，不代替 MCP 连通性检查。
 
 ## 输出与更新
 
@@ -147,7 +196,7 @@ npm run ai-init -- doctor --root /path/to/project
 
 通过 `dsh --profile web --patch /path/to/workspace.yml` 启动。该插件不会根据对话随意切换可写项目根目录。
 
-注册四个工具：
+注册七个工具：
 
 | 工具 | 用途 |
 | --- | --- |
@@ -155,6 +204,9 @@ npm run ai-init -- doctor --root /path/to/project
 | ai_project_plan | 根据用户描述生成文件预览和短期 planId |
 | ai_project_apply | 应用该会话的计划；校验文件未改变 |
 | ai_project_doctor | 检查归属、漂移及是否需要更新 |
+| ai_preferences_reference | 读取指定参考仓库的偏好证据 |
+| ai_preferences_export | 导出当前可复用个人模板 |
+| ai_project_tooling | 检查工具需求、预览或安装 CodeGraph |
 
 有 skills 服务时自动注册 `project-ai-init` Skill，无需再单独安装 5 个上游 Skill。planId 只在当前插件实例中有效，30 分钟过期、应用后失效；插件卸载后重新计划。
 
@@ -172,7 +224,7 @@ npm run ai-init -- doctor --root /path/to/project
 
 ```sh
 npm pack --workspace @klaypeter/project-ai-init
-npm install -g ./klaypeter-project-ai-init-0.1.0.tgz
+npm install -g ./klaypeter-project-ai-init-0.2.0.tgz
 peter-ai install-skill --target /path/to/project/.agents/skills
 ```
 
@@ -185,11 +237,26 @@ dsh 与支持 AGENTS.md 的 Agent 共享根入口。Claude 目标使用其官方
 - 检测 Node.js 多包项目的本地 manifest、锁文件和脚本，分别记录 runner。无明确包管理器时不猜测。
 - Python、Rust、Go、Flutter 目前识别文件线索；复杂命令、架构和语义冲突仍由当前 Agent 阅读项目确认。
 - 扫描跳过依赖、缓存、vendor 和环境变量文件；限制为 8 层目录、8,000 个条目，超过时要求选更小的根目录，不默默使用不完整扫描。
-- 不联网安装依赖或 Skill，不读取真实业务配置，不修改全局 Agent 设置，不执行项目脚本或 Git 操作。
+- init/sync 不执行项目脚本或 Git 操作；独立工具安装步骤会下载依赖并建立索引。其他 MCP 安装与宿主配置由当前 Agent 完成。
 - doctor 检查归属和可推导的配置变化，不证明测试通过或宿主已加载全部指令。
 
 运行 `npm test --workspace @klaypeter/project-ai-init` 验证空项目、已有多包项目、手写保护、重复更新、过期计划、冲突、回滚和来源哈希。实际运行了 Node 和 Python 骨架测试。
 
-已对用户提供的参考项目只读扫描/预览，识别到后端 Bun、前端 pnpm；没有对该参考项目应用配置。Harness 0.1.0-rc.6 使用真实 Cordis 服务验证了四个工具、应用与同步、planId 失效和卸载清理。没有进行模型驱动的完整业务开发评测。
+已对用户提供的参考项目只读扫描/预览，识别到后端 Bun、前端 pnpm；没有对该参考项目应用配置。Harness 0.1.0-rc.6 使用真实 Cordis 服务验证了工具注册、应用与同步、planId 失效和卸载清理。没有进行模型驱动的完整业务开发评测。
 
-5 个上游 Skill 来源与许可见 [THIRD_PARTY.md](THIRD_PARTY.md)，设计见 [FEATURE.md](FEATURE.md)。原创实现 MIT，上游资料各自授权。
+第三方资料许可见 [THIRD_PARTY.md](THIRD_PARTY.md)，设计见 [FEATURE.md](FEATURE.md)。原创实现 MIT，上游资料各自授权。
+
+## 从旧版本升级
+
+在插件仓库执行：
+
+```sh
+git pull
+npm ci
+npm pack --workspace @klaypeter/project-ai-init
+dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.2.0.tgz"
+```
+
+随后重启对应 profile。旧项目无需删除配置或重新创建；sync 会保留原来的个人偏好。需要新 Peter 预设时显式运行 `peter-ai sync --root /path/to/project --preset peter`，或让 Agent 切换预设。原生成区域被手改时仍会提示冲突，先保留改动再解决。
+
+新版验证覆盖模板跨项目复用、项目规则隔离、导出、更新、工具安装失败与覆盖保护。可选联网测试 `scripts/test-project-ai-codegraph.mjs` 实际安装固定版本、建立索引，通过真实 dsh MCP 桥接调用只读查询；需要 `DSH_MODULE_ROOT` 指向现有 Harness 的 node_modules。

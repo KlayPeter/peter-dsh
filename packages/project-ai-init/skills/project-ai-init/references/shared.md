@@ -18,4 +18,4 @@ Harness 使用 ai_project_plan 返回的 planId 调用 ai_project_apply；文件
 
 `.ai-init/config.json` 是可编辑配置源；修改其中 preset.rules 后 sync。AGENTS.md / CLAUDE.md / .gitignore 的标记外内容归用户维护；标记内和 .agent-context 生成文件若被手改，sync 会拒绝覆盖。解决时先保存手改，将需要保留的规则迁入 preset 或标记外，再恢复上次生成区域后更新；不要删除状态文件来绕过冲突。
 
-初始化器不会执行脚本、安装依赖、提交或推送。当前 Agent 可在用户授权范围内继续这些步骤。读取脚本名只证明命令有定义，不等于命令安全、依赖齐全或测试通过。
+init/sync 只处理配置；工具安装使用独立 setup-codegraph 或宿主执行工具，见 tooling.md。提交和推送仍遵循当前请求。读取脚本名只证明命令有定义，不等于命令安全、依赖齐全或测试通过。
