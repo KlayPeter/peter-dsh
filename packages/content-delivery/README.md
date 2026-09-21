@@ -43,13 +43,17 @@ delivery-v1/
 
 已能正常使用 dsh 的用户，按以下顺序操作。需要 Git、Node.js 22+ 和 pnpm；没有 pnpm 时先执行 `npm install -g pnpm`。以下是 macOS / Linux 终端命令。
 
+安装源码放在固定工具目录，不需要放进待处理的业务项目。已有仓库可直接复用并跳过下载；插件已安装时，直接从目标项目启动 dsh，无需重复 clone。以下首次下载命令要求 `~/.local/share/peter-dsh/source` 尚不存在。
+
 ```sh
 # 已下载仓库的用户直接进入现有 peter-dsh 目录
-git clone https://github.com/KlayPeter/peter-dsh.git
-cd peter-dsh
+mkdir -p "$HOME/.local/share/peter-dsh"
+git clone https://github.com/KlayPeter/peter-dsh.git "$HOME/.local/share/peter-dsh/source"
+cd "$HOME/.local/share/peter-dsh/source"
 npm ci
-npm pack --workspace @klaypeter/content-delivery
-dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.1.tgz"
+mkdir -p "$HOME/.local/share/peter-dsh/packages"
+npm pack --workspace @klaypeter/content-delivery --pack-destination "$HOME/.local/share/peter-dsh/packages"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.1.1.tgz"
 # 为 PDF 和 Mermaid 图准备 Chromium；首次需要下载
 npm run deliver -- setup-browser
 ```
@@ -220,8 +224,9 @@ delivery-v1/
 ```sh
 git pull
 npm ci
-npm pack --workspace @klaypeter/content-delivery
-dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.1.tgz"
+mkdir -p "$HOME/.local/share/peter-dsh/packages"
+npm pack --workspace @klaypeter/content-delivery --pack-destination "$HOME/.local/share/peter-dsh/packages"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-content-delivery-0.1.1.tgz"
 ```
 
 独立 CLI 用户改用 `npm install -g ./klaypeter-content-delivery-0.1.1.tgz`。无需修改 dsh 自身依赖或重新下载 Chromium。

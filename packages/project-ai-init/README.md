@@ -37,14 +37,18 @@ Agent 会读取参考资料和目标项目，提炼偏好、生成变更计划�
 
 已能正常使用 dsh 的用户，按以下顺序操作。需要 Git、Node.js 22+ 和 pnpm；没有 pnpm 时先执行 `npm install -g pnpm`。以下是 macOS / Linux 终端命令。
 
+安装源码放在固定工具目录，不需要放进待处理的业务项目。已有仓库可直接复用并跳过下载；插件已安装时，直接从目标项目启动 dsh，无需重复 clone。以下首次下载命令要求 `~/.local/share/peter-dsh/source` 尚不存在。
+
 ```sh
 # 下载仓库；已下载的用户直接进入现有 peter-dsh 目录
-git clone https://github.com/KlayPeter/peter-dsh.git
-cd peter-dsh
+mkdir -p "$HOME/.local/share/peter-dsh"
+git clone https://github.com/KlayPeter/peter-dsh.git "$HOME/.local/share/peter-dsh/source"
+cd "$HOME/.local/share/peter-dsh/source"
 npm ci
 # 打包这个插件，安装到 web profile
-npm pack --workspace @klaypeter/project-ai-init
-dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.2.0.tgz"
+mkdir -p "$HOME/.local/share/peter-dsh/packages"
+npm pack --workspace @klaypeter/project-ai-init --pack-destination "$HOME/.local/share/peter-dsh/packages"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-project-ai-init-0.2.0.tgz"
 ```
 
 如果平时用的是 `tui` 或其他 profile，把 `web` 换成对应名称。关闭旧 dsh，将下面路径换成**要配置的目标项目**，重新启动：
@@ -282,8 +286,9 @@ dsh 与支持 AGENTS.md 的 Agent 共享根入口。Claude 目标使用其官方
 ```sh
 git pull
 npm ci
-npm pack --workspace @klaypeter/project-ai-init
-dsh plugin --profile web add "$PWD/klaypeter-project-ai-init-0.2.0.tgz"
+mkdir -p "$HOME/.local/share/peter-dsh/packages"
+npm pack --workspace @klaypeter/project-ai-init --pack-destination "$HOME/.local/share/peter-dsh/packages"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-project-ai-init-0.2.0.tgz"
 ```
 
 随后重启对应 profile。旧项目无需删除配置或重新创建；sync 会保留原来的个人偏好。需要新 Peter 预设时显式运行 `peter-ai sync --root /path/to/project --preset peter`，或让 Agent 切换预设。原生成区域被手改时仍会提示冲突，先保留改动再解决。

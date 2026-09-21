@@ -20,12 +20,16 @@ Agent 说“完成了”，你还想知道：需求有没有漏？功能实际�
 
 需要已能正常使用的 dsh、Node.js 22+、Git 和 pnpm。以下命令用于 macOS / Linux；目前未发布 npm，通过仓库打包安装。
 
+安装源码放在固定工具目录，不需要放进待处理的业务项目。已有仓库可直接复用并跳过下载；插件已安装时，直接从目标项目启动 dsh，无需重复 clone。以下首次下载命令要求 `~/.local/share/peter-dsh/source` 尚不存在。
+
 ```sh
-git clone https://github.com/KlayPeter/peter-dsh.git
-cd peter-dsh
+mkdir -p "$HOME/.local/share/peter-dsh"
+git clone https://github.com/KlayPeter/peter-dsh.git "$HOME/.local/share/peter-dsh/source"
+cd "$HOME/.local/share/peter-dsh/source"
 npm ci
-npm pack --workspace @klaypeter/delivery-acceptance
-dsh plugin --profile web add "$PWD/klaypeter-delivery-acceptance-0.1.0.tgz"
+mkdir -p "$HOME/.local/share/peter-dsh/packages"
+npm pack --workspace @klaypeter/delivery-acceptance --pack-destination "$HOME/.local/share/peter-dsh/packages"
+dsh plugin --profile web add "$HOME/.local/share/peter-dsh/packages/klaypeter-delivery-acceptance-0.1.0.tgz"
 ```
 
 已经下载仓库的用户直接进入原目录。`web` 改成你平时使用的 profile；没有 pnpm 时先执行 `npm install -g pnpm`。

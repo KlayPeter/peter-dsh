@@ -18,21 +18,26 @@
 
 也可以直接把[本仓库链接](https://github.com/KlayPeter/peter-dsh)交给能执行本地命令的 Agent，让它按 README 帮你安装。例如：
 
-> 请阅读 https://github.com/KlayPeter/peter-dsh 的 README，帮我把内容交付插件安装到 DeepSeek Harness 的 web profile，检查依赖和安装结果，并告诉我如何从目标项目目录启动使用。
+> 请阅读 https://github.com/KlayPeter/peter-dsh 的 README，帮我把内容交付插件安装到 DeepSeek Harness 的 web profile。先检查插件是否已安装；需要下载源码时，检查当前目录和我提供的本地仓库路径，优先复用已有仓库，找不到再下载到 ~/.local/share/peter-dsh/source，不要克隆到当前业务项目。按文档把安装包保存到固定目录，检查依赖和安装结果，并告诉我如何从目标项目目录启动使用。
 
 把示例中的插件名称换成你需要的插件即可；想自己操作，也可以按下面的步骤安装。
 
 需要已能正常使用的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)、Git、Node.js 22+ 和 pnpm。目前插件尚未发布到 npm，从仓库打包安装。
 
-先下载仓库并准备依赖：
+**安装和使用分开：** 已安装的插件直接在目标项目启动 dsh 使用，不需要再次 clone 或 npm ci。安装时优先复用已有仓库；首次下载到下面的固定工具目录，不放进业务项目。
+
+首次下载并准备依赖（目标目录已存在时，进入原目录检查，勿覆盖）：
 
 ```sh
-git clone https://github.com/KlayPeter/peter-dsh.git
-cd peter-dsh
+mkdir -p "$HOME/.local/share/peter-dsh"
+git clone https://github.com/KlayPeter/peter-dsh.git "$HOME/.local/share/peter-dsh/source"
+cd "$HOME/.local/share/peter-dsh/source"
 npm ci
 ```
 
 然后在上方表格中选择插件，按其 README 完成打包、安装和首次使用。已有仓库可先 `git pull` 更新；缺少 pnpm 时执行 `npm install -g pnpm`。
+
+各插件的安装步骤会将 `.tgz` 包保存到 `~/.local/share/peter-dsh/packages/`，避免安装来源依赖临时克隆目录。dsh 运行使用 profile 中已安装的插件；保留这些安装包，是为了以后重装或更新依赖。源码仓库及其 `node_modules` 不需要为插件运行一直保留，但源码可用于后续更新和开发。旧步骤安装的用户，请按新版安装步骤重新安装后再清理原目录。
 
 安装时选择你实际使用的 dsh profile，例如 `web` 或 `tui`。安装后，从**要处理的目标项目目录**重启同一个 profile；插件默认以 dsh 启动目录作为工作目录。
 
