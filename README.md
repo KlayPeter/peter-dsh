@@ -16,6 +16,12 @@
 
 ## 安装到 DeepSeek Harness
 
+也可以直接把[本仓库链接](https://github.com/KlayPeter/peter-dsh)交给能执行本地命令的 Agent，让它按 README 帮你安装。例如：
+
+> 请阅读 https://github.com/KlayPeter/peter-dsh 的 README，帮我把内容交付插件安装到 DeepSeek Harness 的 web profile，检查依赖和安装结果，并告诉我如何从目标项目目录启动使用。
+
+把示例中的插件名称换成你需要的插件即可；想自己操作，也可以按下面的步骤安装。
+
 需要已能正常使用的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)、Git、Node.js 22+ 和 pnpm。目前插件尚未发布到 npm，从仓库打包安装。
 
 先下载仓库并准备依赖：
