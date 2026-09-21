@@ -8,7 +8,7 @@
 
 | 插件 | 帮你做什么 | 当前版本 | 详细说明 |
 | --- | --- | --- | --- |
-| **内容交付** | 把零散资料整理成清晰易读的文档，配合图示表达，导出 HTML、PDF 和可编辑 Word。支持 PRD、技术说明、详细设计、博客和调研报告。 | v0.1.0 | [安装与使用](packages/content-delivery/README.md) |
+| **内容交付** | 把零散资料整理成清晰易读的文档，配合图示表达，导出 HTML、PDF 和可编辑 Word。支持 PRD、技术说明、详细设计、博客和调研报告。 | v0.1.1 | [安装与使用](packages/content-delivery/README.md) |
 | **项目 AI 配置** | 让 Agent 延续你的开发习惯：选择预设或从参考仓库提取个人模板，结合新旧项目配置规则，持续更新偏好，并准备所需工具。 | v0.2.0 | [安装与使用](packages/project-ai-init/README.md) |
 | **交付验收助手** | Agent 说“完成了”之后，按原始需求逐项检查证据，列出已验证、失败、遗漏和待复核事项，告诉你还差什么。 | v0.1.0 | [安装与使用](packages/delivery-acceptance/README.md) |
 

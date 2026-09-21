@@ -141,3 +141,32 @@ test('CLI rejects missing paths and installation does not overwrite a skill', as
   assert.ok(await readFile(path.join(dir, 'content-delivery/upstream/provenance.json'), 'utf8'));
   assert.throws(() => execFileSync(process.execPath, [cli, 'install-skill', '--target', dir], { stdio: 'pipe' }));
 });
+
+test('image conversion leaves native libraries out of the host and reports invalid input', async t => {
+  const dir = await workspace(t);
+  const png = await sharp({ create: { width: 24, height: 16, channels: 3, background: '#17615f' } }).png().toBuffer();
+  await writeFile(path.join(dir, 'picture.png'), png);
+  const moduleUrl = new URL('../src/assets.js', import.meta.url).href;
+  const script = `
+    import assert from 'node:assert/strict';
+    import { loadLocalImage } from ${JSON.stringify(moduleUrl)};
+    const result = await loadLocalImage('picture.png', ${JSON.stringify(dir)});
+    assert.equal(result.width, 24); assert.equal(result.height, 16);
+    assert.ok(!process.report.getReport().sharedObjects.some(p => /sharp|libvips/i.test(p)));
+  `;
+  execFileSync(process.execPath, ['--input-type=module', '-e', script], { stdio: 'pipe' });
+  await writeFile(path.join(dir, 'rotated.jpg'), await sharp(png).jpeg().withMetadata({ orientation: 6 }).toBuffer());
+  const rotated = await loadLocalImage('rotated.jpg', dir);
+  assert.equal(rotated.width, 16); assert.equal(rotated.height, 24);
+  await writeFile(path.join(dir, 'picture.webp'), await sharp(png).webp().toBuffer());
+  assert.equal((await loadLocalImage('picture.webp', dir)).width, 24);
+  await writeFile(path.join(dir, 'invalid.png'), 'not an image');
+  await assert.rejects(loadLocalImage('invalid.png', dir), /Image conversion failed/);
+  await writeFile(path.join(dir, 'vector.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>');
+  await assert.rejects(loadLocalImage('vector.svg', dir), /Unsupported image format/);
+  const { normalizeImage } = await import('../src/image-process.js');
+  const controller = new AbortController();
+  const pending = normalizeImage(png, { signal: controller.signal });
+  controller.abort();
+  await assert.rejects(pending, /abort/i);
+});

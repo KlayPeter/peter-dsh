@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { exportDocument, checkMarkdown, getGuide, profiles, skillRoot } from './index.js';
 
-const help = `Peter Content Delivery 0.1.0
+const help = `Peter Content Delivery 0.1.1
 
 Usage:
   peter-deliver guide --type prd|explainer|design|blog|research [--mode format|improve|create] [--audience text]

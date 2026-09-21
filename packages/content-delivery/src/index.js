@@ -37,7 +37,7 @@ export async function exportDocument({ input, out, formats = ['html'], type = 'e
     signal?.throwIfAborted();
     const assetDir = path.join(output, 'assets');
     await mkdir(assetDir);
-    const assets = await prepareAssets(document.tokens, { baseDir: path.dirname(inputPath), assetDir, browser });
+    const assets = await prepareAssets(document.tokens, { baseDir: path.dirname(inputPath), assetDir, browser, signal });
     const files = [];
     const html = renderHtml(document, assets, { toc });
     if (formats.includes('html')) { await writeFile(path.join(output, 'document.html'), html); files.push('document.html'); }
@@ -56,7 +56,7 @@ export async function exportDocument({ input, out, formats = ['html'], type = 'e
     await writeFile(path.join(output, 'checks.json'), JSON.stringify(checks, null, 2) + '\n');
     const hash = buffer => createHash('sha256').update(buffer).digest('hex');
     const artifacts = await Promise.all(files.map(async name => ({ name, sha256: hash(await readFile(path.join(output, name))) })));
-    const manifest = { schemaVersion: 1, generator: '@klaypeter/content-delivery@0.1.0', title: document.title, type, createdAt: new Date().toISOString(), sourceSha256: hash(source), formats, draft: checks.status === 'blocked', checks: checks.status, assets: assets.size, artifacts };
+    const manifest = { schemaVersion: 1, generator: '@klaypeter/content-delivery@0.1.1', title: document.title, type, createdAt: new Date().toISOString(), sourceSha256: hash(source), formats, draft: checks.status === 'blocked', checks: checks.status, assets: assets.size, artifacts };
     await writeFile(path.join(output, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
     return { output, files: files.map(name => path.join(output, name)), checks, manifest };
   } catch (error) { await rm(output, { recursive: true, force: true }); throw error; }

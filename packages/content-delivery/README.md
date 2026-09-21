@@ -35,7 +35,7 @@ delivery-v1/
 
 写作和图示选择由当前 Agent 完成，程序负责检查与导出。导出命令本身不会自动改写文章；事实、来源和最终阅读效果仍需要复查。
 
-当前版本 **v0.1.0**，支持 DeepSeek Harness、独立 CLI 和可移植 Skill。复用当前 Agent 的模型，无需额外模型 API Key。
+当前版本 **v0.1.1**，支持 DeepSeek Harness、独立 CLI 和可移植 Skill。复用当前 Agent 的模型，无需额外模型 API Key。
 
 [安装到 dsh](#第一次使用安装到-deepseek-harness) · [其他 Agent](#给其他-agent-使用) · [直接用命令行导出](#安装与第一次导出)
 
@@ -49,7 +49,7 @@ git clone https://github.com/KlayPeter/peter-dsh.git
 cd peter-dsh
 npm ci
 npm pack --workspace @klaypeter/content-delivery
-dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.0.tgz"
+dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.1.tgz"
 # 为 PDF 和 Mermaid 图准备 Chromium；首次需要下载
 npm run deliver -- setup-browser
 ```
@@ -113,7 +113,7 @@ PETER_DELIVERY_CHROMIUM='/Applications/Google Chrome.app/Contents/MacOS/Google C
 
 ```sh
 npm pack --workspace @klaypeter/content-delivery
-npm install -g ./klaypeter-content-delivery-0.1.0.tgz
+npm install -g ./klaypeter-content-delivery-0.1.1.tgz
 peter-deliver --help
 peter-deliver setup-browser
 ```
@@ -169,7 +169,7 @@ CLI 不提供虚假的“自动改写”：它返回指南、检查结构、导�
 
 本地开发入口为 `src/dsh.js`。裸模块 `@deepseek-ai/dsh-tools` 必须能从该文件所在目录解析；它是可选 peer，普通 CLI 不依赖 Harness。与已有 Harness 开发环境联调时，应使用其同版本依赖，不要随意安装另一个 SDK 版本。
 
-macOS 实测中，插件与 dsh 自带 sharp 可能出现 `GNotificationCenterDelegate` 重复原生库警告。本轮启动及三格式导出通过，但警告尚未消除；如遇崩溃，可先用独立 CLI 导出，并反馈 dsh 版本与错误日志。
+v0.1.1 将本地图片转换放到独立子进程，避免插件的 sharp 原生库与 dsh 在同一进程重复加载。Mermaid 图片尺寸直接从生成的 PNG 读取。图片格式、路径和大小限制保持不变。
 
 已在 Harness `0.1.0-rc.6` 的真实 Cordis、ToolRuntime、SkillRegistry 上验证注册和卸载。尚未执行付费模型驱动的端到端会话，也未承诺所有预览版 API 兼容。
 
@@ -212,3 +212,16 @@ delivery-v1/
 在仓库根运行 `npm test` 和 `npm run test:integration`。后者实际生成五类文档的三种格式，需要浏览器。见 [实现与验证记录](https://github.com/KlayPeter/peter-dsh/blob/main/docs/content-delivery/implementation.md)。
 
 7 个上游 Skill 以原始快照保存在 `vendor/`，按需读取，不一次注入所有工作流。固定提交、许可证与哈希见 [THIRD_PARTY.md](THIRD_PARTY.md) 和 `vendor/provenance.json`。原创部分 MIT，上游部分各自授权。
+
+## 从 v0.1.0 升级
+
+在插件仓库目录执行以下命令，再关闭并重新启动相同的 dsh profile：
+
+```sh
+git pull
+npm ci
+npm pack --workspace @klaypeter/content-delivery
+dsh plugin --profile web add "$PWD/klaypeter-content-delivery-0.1.1.tgz"
+```
+
+独立 CLI 用户改用 `npm install -g ./klaypeter-content-delivery-0.1.1.tgz`。无需修改 dsh 自身依赖或重新下载 Chromium。

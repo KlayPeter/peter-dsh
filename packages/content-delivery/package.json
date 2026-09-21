@@ -1,6 +1,6 @@
 {
   "name": "@klaypeter/content-delivery",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-guided Chinese document authoring and local Markdown to HTML, PDF and DOCX delivery",
   "type": "module",
   "main": "src/index.js",

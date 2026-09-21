@@ -1,12 +1,12 @@
 import { readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import sharp from 'sharp';
+import { normalizeImage, pngAsset } from './image-process.js';
 import { offlinePage } from './browser.js';
 
 const require = createRequire(import.meta.url);
 
-export async function loadLocalImage(src, baseDir) {
+export async function loadLocalImage(src, baseDir, { signal } = {}) {
   if (!src || /^(?:[a-z][\w+.-]*:|\/\/|\/|\\)/i.test(src)) throw new Error(`Only relative local PNG/JPEG/WebP images are supported: ${src}`);
   const root = await realpath(baseDir);
   const resolved = await realpath(path.resolve(root, decodeURIComponent(src)));
@@ -14,11 +14,7 @@ export async function loadLocalImage(src, baseDir) {
   if (relative.startsWith('..' + path.sep) || relative === '..' || path.isAbsolute(relative)) throw new Error(`Image escapes the source directory: ${src}`);
   if ((await stat(resolved)).size > 10 * 1024 * 1024) throw new Error(`Image exceeds 10 MiB: ${src}`);
   const raw = await readFile(resolved);
-  const metadata = await sharp(raw, { limitInputPixels: 40_000_000 }).metadata();
-  if (!['png', 'jpeg', 'webp'].includes(metadata.format)) throw new Error(`Unsupported image format: ${src}. Use PNG, JPEG or WebP.`);
-  const png = await sharp(raw, { limitInputPixels: 40_000_000 }).rotate().png().toBuffer();
-  const info = await sharp(png).metadata();
-  return { buffer: png, width: info.width, height: info.height };
+  return normalizeImage(raw, { signal });
 }
 
 export async function renderDiagram(code, browser) {
@@ -38,14 +34,13 @@ export async function renderDiagram(code, browser) {
     const size = await page.locator('#diagram').boundingBox();
     if (!size || size.width > 5000 || size.height > 5000) throw new Error('Diagram is too large; split it into smaller views.');
     const buffer = await page.locator('#diagram').screenshot({ type: 'png', animations: 'disabled' });
-    const metadata = await sharp(buffer).metadata();
-    return { buffer, width: metadata.width, height: metadata.height };
+    return pngAsset(buffer);
   } catch (error) {
     throw new Error(`Mermaid rendering failed: ${error.message}`, { cause: error });
   } finally { clearTimeout(timer); await page.context().close(); }
 }
 
-export async function prepareAssets(tokens, { baseDir, assetDir, browser }) {
+export async function prepareAssets(tokens, { baseDir, assetDir, browser, signal }) {
   const assets = new Map();
   let count = 0;
   for (const token of tokens) {
@@ -58,7 +53,7 @@ export async function prepareAssets(tokens, { baseDir, assetDir, browser }) {
     }
     for (const child of token.children || []) {
       if (child.type !== 'image') continue;
-      const asset = await loadLocalImage(child.attrGet('src'), baseDir);
+      const asset = await loadLocalImage(child.attrGet('src'), baseDir, { signal });
       const id = `image-${++count}`;
       await writeFile(path.join(assetDir, `${id}.png`), asset.buffer);
       assets.set(child, { ...asset, filename: `${id}.png`, alt: child.content });
